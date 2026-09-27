@@ -1,0 +1,15 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Caché de Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Progreso del jugador (cada quien tiene el suyo)
+save_data.json
+*.tmp
+
+# Archivos temporales de audio generados
+assets/sounds/**/*.tmp
