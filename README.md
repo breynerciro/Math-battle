@@ -149,6 +149,12 @@ Y regeneras todos los PNG con:
 ./venv/bin/python tools/generate_sprites.py
 ```
 
+> **Nota:** el héroe y los 5 bosses (Dragón Básico, Gólem de Piedra,
+> Fénix, Hidra y Dragón Supremo) viven en `tools/custom_art.py`, que
+> tiene **prioridad** sobre `sprite_data.py`. Edítalos ahí. Puedes
+> validar las cuadrículas con `./venv/bin/python tools/validate_art.py`
+> (agrega `--preview` para ver la silueta en ASCII).
+
 ### 2. Crea un enemigo nuevo
 
 1. Crea sus sprites en `assets/sprites/enemies/<nombre>/` con las
