@@ -75,11 +75,18 @@ Math-battle/
 │   ├── game.py              ← loop principal y pila de estados
 │   ├── save_system.py       ← guardar/cargar progreso (JSON)
 │   ├── states/              ← cada "pantalla" del juego
-│   ├── entities/            ← el héroe, los enemigos y sus sprites
+│   ├── entities/            ← el héroe, los enemigos y sus estadísticas
 │   ├── math_engine/         ← 🧠 el corazón educativo: genera los retos
 │   ├── combat/              ← lógica de turnos, daño y efectos
 │   └── ui/                  ← botones, HUD, sonidos, fondos
-├── assets/                  ← fuente pixel art + sonidos generados
+├── assets/
+│   ├── sprites/             ← pixel art PNG (héroe, enemigos, efectos)
+│   ├── backgrounds/         ← fondos de batalla PNG
+│   ├── fonts/               ← fuente pixel art
+│   └── sounds/              ← sonidos generados (1ª ejecución)
+├── tools/
+│   ├── sprite_data.py       ← datos fuente del pixel art (cuadrículas)
+│   └── generate_sprites.py  ← regenera los PNG de assets/
 └── tests/                   ← tests automáticos (pytest)
 ```
 
@@ -102,33 +109,55 @@ Los tests verifican que:
 
 ## 👩‍🎓 Guía para estudiantes: ¡personaliza el juego!
 
-### 1. Dibuja tus propios personajes (¡sin programa de dibujo!)
+### 1. Cambia los personajes (¡sin tocar el código del juego!)
 
-Abre `src/entities/sprites.py`. Cada personaje es una lista de
-"cuadrículas": cada **letra** es un píxel de color y cada punto `.` es
-transparencia. Cambia las letras y mira el resultado:
+Los sprites son imágenes PNG en `assets/sprites/`. Hay dos formas de
+personalizarlos:
+
+**Opción A — Dibuja tus propios PNG** (recomendada para arte final):
+usa **Piskel** (piskel.web.app) o **Lospec**, exporta cada frame como
+`frame0.png`, `frame1.png`... y reemplaza los archivos conservando los
+nombres. El juego los carga automáticamente:
+
+```
+assets/sprites/enemies/slime/idle/frame0.png    ← reemplázalo por tu slime
+assets/sprites/hero/attack/frame1.png           ← tu héroe atacando
+assets/backgrounds/level1.png                   ← tu bosque (960×540)
+```
+
+**Opción B — Edita las cuadrículas de letras** (sin programa de dibujo):
+abre `tools/sprite_data.py`. Cada **letra** es un píxel de color de la
+paleta y cada punto `.` es transparencia:
 
 ```python
 SLIME_SPRITES = {
-    "idle": [[
-        "....GGGG....",   # G = verde
-        "..GGGGGGGG..",
-        ".GGWGGGGWGG.",   # W = blanco (ojos)
-        ".GGKGGGGKGG.",   # K = negro (pupila)
-        "GGGGGGGGGGGG",
-    ]],
+    "idle": [
+        [
+            "....GGGG....",   # G = verde
+            "..GGGGGGGG..",
+            ".GGWGGGGWGG.",   # W = blanco (ojos)
+            ".GGKGGGGKGG.",   # K = negro (pupila)
+            "GGGGGGGGGGGG",
+        ],
+    ],
 }
 ```
 
-También puedes usar herramientas web como **Piskel** (piskel.web.app)
-o **Lospec** para diseñar pixel art, y luego copiar los colores a la
-paleta de `sprites.py`.
+Y regeneras todos los PNG con:
+
+```bash
+./venv/bin/python tools/generate_sprites.py
+```
 
 ### 2. Crea un enemigo nuevo
 
-Copia un archivo de `src/entities/enemies/`, cambia el nombre, las
-cuadrículas y las estadísticas (`hp`, `attack`), y agrégalo a la lista
-de su nivel en `src/entities/enemies/__init__.py`.
+1. Crea sus sprites en `assets/sprites/enemies/<nombre>/` con las
+   carpetas `idle/` y `hurt/` (frames `frame0.png`, ...).
+2. Copia una clase de `src/entities/enemies/`, cambia el nombre y las
+   estadísticas (`hp`, `attack`). El nombre de la clase en snake_case
+   es el nombre de carpeta del sprite (`DarkKnight` → `dark_knight`;
+   también puedes fijar `SPRITE_NAME`).
+3. Agrégalo a la lista de su nivel en `src/entities/enemies/__init__.py`.
 
 ### 3. Cambia la dificultad del juego
 
@@ -147,8 +176,10 @@ para garantizar que el resultado siempre sea bonito. ¡Copia el patrón!
 ## 🎨 Notas técnicas
 
 - **Resolución**: 960×540 (escala 2× de 480×270 para pixel art nítido).
-- **Sprites**: se dibujan con código (cuadrículas de caracteres) — no
-  hacen falta archivos de imagen.
+- **Sprites y fondos**: imágenes PNG en `assets/`. Se generan con
+  `tools/generate_sprites.py` (a partir de cuadrículas de letras en
+  `tools/sprite_data.py`) y se pueden reemplazar por pixel art propio
+  sin tocar el código del juego.
 - **Sonidos y música**: se generan matemáticamente (ondas senoidales) y
   se guardan como `.wav` en `assets/sounds/` la primera vez que se
   ejecuta el juego.

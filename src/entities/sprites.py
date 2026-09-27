@@ -1,228 +1,76 @@
 """
-sprites.py — Pixel art dibujado con código
-==========================================
+sprites.py — Carga de los sprites del juego
+===========================================
 
-Cada sprite es una lista de "cuadrículas" (una por frame). Cada carácter
-de la cuadrícula es un píxel de un color definido en la paleta.
-El punto "." significa transparente.
+Todos los personajes viven como PNG en assets/sprites/:
 
-Este archivo es el lugar PERFECTO para que los estudiantes cambien
-los personajes: solo editan las letras de las cuadrículas. También se
-pueden reemplazar por imágenes reales más adelante.
+    assets/sprites/hero/<animación>/frame<N>.png
+    assets/sprites/enemies/<enemigo>/<animación>/frame<N>.png
+    assets/sprites/effects/star/frame<N>.png
+
+Este archivo solo SABE DÓNDE están y cómo cargarlos. Para cambiar el
+aspecto del juego:
+
+1. Reemplaza los PNG (mismo nombre de archivo), o
+2. Edita las cuadrículas de tools/sprite_data.py y regenera:
+
+       ./venv/bin/python tools/generate_sprites.py
+
+¿Pixel art propio? Exporta cada frame como frame0.png, frame1.png...
+(resolución libre: el PNG se dibuja tal cual en pantalla).
 """
 
-# ==========================================================================
-#  HÉROE MATEMÁTICO (14 x 14 píxeles aprox)
-#  S=piel  H=pelo  A=armadura  D=armadura oscura  R=capa  W=blanco  K=negro
-# ==========================================================================
-PALETTE_HERO = {
-    "S": (235, 180, 140),   # piel
-    "H": (90, 60, 30),      # pelo
-    "A": (70, 130, 230),    # armadura azul
-    "D": (40, 70, 150),     # armadura oscura
-    "R": (220, 60, 60),     # capa
-    "W": (245, 245, 245),   # blanco
-    "K": (25, 25, 30),      # contorno/negro
-    "Y": (250, 210, 60),    # detalles dorados
+from pathlib import Path
+
+from .. import config
+from ..ui.animated_sprite import AnimatedSprite
+
+
+def to_snake(class_name: str) -> str:
+    """BasicDragon → basic_dragon (nombre de carpeta del sprite)."""
+    result = []
+    for index, char in enumerate(class_name):
+        if char.isupper() and index > 0:
+            result.append("_")
+        result.append(char.lower())
+    return "".join(result)
+
+
+# Carpetas de sprites (definidas en config.py)
+HERO_DIR = Path(config.SPRITES_DIR) / "hero"
+ENEMIES_DIR = Path(config.SPRITES_DIR) / "enemies"
+EFFECTS_DIR = Path(config.SPRITES_DIR) / "effects"
+
+# Especificación de animaciones: nombre → (fps, ¿se repite en bucle?)
+HERO_ANIM_SPECS: dict[str, tuple[float, bool]] = {
+    "idle": (4.0, True),
+    "attack": (12.0, False),
+    "hurt": (10.0, False),
+    "victory": (6.0, True),
 }
 
-HERO_IDLE = [
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SSSSS....",
-        "......SSS.....",
-        "....AAAAAAA...",
-        "...AAADDDAA...",
-        "...SAADADAAS..",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "....KK..KK....",
-        "..............",
-    ],
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SSSSS....",
-        "......SSS.....",
-        "....AAAAAAA...",
-        "...AAADDDAA...",
-        "...SAADADAAS..",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "...KK....KK...",
-        "..............",
-    ],
-]
-
-HERO_ATTACK = [
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SSSSS....",
-        "......SSS.....",
-        "....AAAAAAA...",
-        "...AAADDDAA..Y",
-        "...SAADADAAS.Y",
-        "...SAAADAAS..Y",
-        "....AAAAAA...Y",
-        "....DD..DD....",
-        "....DD..DD....",
-        "....KK..KK....",
-        "..............",
-    ],
-    [
-        "..Y..HHH......",
-        "..Y.HHHHH.....",
-        "..Y.HSSSH.....",
-        "..YSSSSS......",
-        "..Y.SSS.......",
-        "..YAAAAAA.....",
-        "..AADDDAAA....",
-        "..AADADAAS....",
-        "...AADAAS.....",
-        "....AAAA......",
-        "....DD.DD.....",
-        "....DD.DD.....",
-        "....KK.KK.....",
-        "..............",
-    ],
-]
-
-HERO_HURT = [
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SWSTS....",
-        "......SSS.....",
-        "....AAAAAAA...",
-        "...AAADDDAA...",
-        "...SAADADAAS..",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "....KK..KK....",
-        "..............",
-    ],
-    [
-        "..............",
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SWSTS....",
-        "....AAAAAAA...",
-        "...AAADDDAA...",
-        "...SAADADAAS..",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "..............",
-        "..............",
-    ],
-]
-
-HERO_VICTORY = [
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SSSSS....",
-        "......SSS.....",
-        "..Y.AAAAAAA.Y.",
-        "..YAAADDDAAY..",
-        "..YSAADADAASY.",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "....KK..KK....",
-        "..............",
-    ],
-    [
-        "......HHH.....",
-        ".....HHHHH....",
-        ".....HSSSH....",
-        ".....SSSSS....",
-        "......SSS.....",
-        "....AAAAAAA...",
-        "..YAAADDDAAY..",
-        "..YSAADADAASY.",
-        "...SAAADAAS...",
-        "....AAAAAA....",
-        "....DD..DD....",
-        "....DD..DD....",
-        "....KK..KK....",
-        "..............",
-    ],
-]
-
-
-# ==========================================================================
-#  EFECTOS (estrellitas de golpe)
-# ==========================================================================
-PALETTE_EFFECTS = {
-    "Y": (250, 210, 60),
-    "W": (255, 255, 255),
-    "O": (240, 140, 40),
+ENEMY_ANIM_SPECS: dict[str, tuple[float, bool]] = {
+    "idle": (3.0, True),
+    "hurt": (10.0, False),
 }
 
-EFFECT_STAR = [
-    [
-        "....Y....",
-        "....W....",
-        "...YWY...",
-        "..YWWWY..",
-        "YYYWWWYYY",
-        "..YWWWY..",
-        "...YWY...",
-        "....W....",
-        "....Y....",
-    ],
-    [
-        ".........",
-        "....Y....",
-        "....W....",
-        "...YWY...",
-        "..YWWWY..",
-        "...YWY...",
-        "....W....",
-        "....Y....",
-        ".........",
-    ],
-    [
-        ".........",
-        ".........",
-        "....Y....",
-        "....W....",
-        "...YWY...",
-        "....W....",
-        "....Y....",
-        ".........",
-        ".........",
-    ],
-]
+HIT_STAR_FPS = 18.0
 
 
-# ==========================================================================
-#  Paletas de ENEMIGOS (se combinan con las cuadrículas de cada nivel)
-# ==========================================================================
-PALETTE_GREEN = {
-    "G": (80, 200, 100), "g": (50, 140, 70), "W": (245, 245, 245),
-    "K": (25, 25, 30), "R": (220, 60, 60), "B": (70, 130, 230),
-    "Y": (250, 210, 60), "P": (150, 80, 220), "O": (240, 140, 40),
-    "C": (80, 220, 220), "S": (200, 200, 210), "D": (60, 60, 75),
-    "N": (120, 80, 50), "b": (110, 70, 45), "M": (170, 60, 200),
-    "L": (220, 180, 240), "E": (255, 150, 50), "F": (255, 220, 120),
-    "T": (100, 100, 115), "U": (40, 40, 55), "X": (90, 40, 40),
-    "w": (180, 180, 190),
-}
+def load_entity(base_dir: Path,
+                specs: dict[str, tuple[float, bool]],
+                fallback_dir: Path | None = None) -> dict:
+    """Carga las animaciones de una entidad según su especificación.
+
+    Args:
+        base_dir:     carpeta con una subcarpeta por animación
+        specs:        {nombre_animación: (fps, ¿bucle?)}
+        fallback_dir: carpeta a usar si base_dir no existe (respaldo)
+    """
+    if fallback_dir is not None and not base_dir.exists():
+        base_dir = fallback_dir
+    return {
+        anim_name: AnimatedSprite.load(base_dir / anim_name,
+                                       fps=fps, loop=loop)
+        for anim_name, (fps, loop) in specs.items()
+    }

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "game-developer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/game-developer/SKILL.md",
+      "computedHash": "5310da9a7910ae7e9d119abb7377b6213b1dc7767e4aacd818b8fdb60abab36f"
+    },
+    "game-juice": {
+      "source": "jayesh-bansal/game-juice",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "2ed6fe1ea4facd12ef8e26dc2073b7860c36511d02e22dfc430a40e1cc9fdb4c"
+    },
+    "pixel-art-sprites": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/pixel-art-sprites/SKILL.md",
+      "computedHash": "6d7f3d45af2fa94e0fe9abe08575e859aa0f24297305ee8b89ac64a7534c9825"
+    },
+    "pygame-core": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/other-engines/pygame-core/SKILL.md",
+      "computedHash": "331708ee677a9fc63e8db30f9aeec44ef94c920b62866fa2f4e82e7e214e9793"
+    }
+  }
+}

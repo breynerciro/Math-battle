@@ -1,4 +1,7 @@
 # Entorno virtual
+.agents/
+.claude/i
+tools/
 venv/
 .venv/
 

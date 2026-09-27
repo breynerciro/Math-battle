@@ -1,85 +1,97 @@
 """
-animated_sprite.py — Sprites animados sin archivos de imagen
-============================================================
+animated_sprite.py — Animaciones a partir de archivos PNG
+=========================================================
 
-Los sprites de Math Battle se DIBUJAN CON CÓDIGO (rects de colores
-en una cuadrícula, como el pixel art de verdad). Esta clase:
+Los sprites del juego NO se dibujan aquí: viven como imágenes PNG en
+assets/sprites/ (generadas con tools/generate_sprites.py o hechas a
+mano). Esta clase solo los CARGA y los REPRODUCE en secuencia.
 
-1. Recibe una LISTA DE FRAMES, donde cada frame es una "cuadrícula"
-   (lista de strings) donde cada carácter es un color.
-2. Convierte cada cuadrícula en una Surface de Pygame (con cache).
-3. Reproduce los frames en secuencia a los FPS de animación indicados.
+Estructura esperada de cada animación (una carpeta = una animación):
 
-Ejemplo de cuadrícula (un slime de 8x6 píxeles):
-    [
-        "........",
-        "..GGGG..",
-        ".GGGGGG.",
-        ".GWGGWG.",     ← W = blanco (ojos)
-        ".GGGGGG.",
-        ".GGGGGG.",
-    ]
+    assets/sprites/hero/idle/frame0.png
+    assets/sprites/hero/idle/frame1.png
+    ...
 
-La tabla de colores se pasa aparte: {"G": VERDE, "W": BLANCO, ...}
+Para cambiar el aspecto de un personaje no hace falta tocar código:
+basta con reemplazar sus PNG conservando los nombres de archivo.
 """
+
+from pathlib import Path
 
 import pygame
 
 
 class AnimatedSprite:
-    """Reproduce una animación hecha de cuadrículas de caracteres."""
+    """Reproduce una animación cuyos frames son imágenes PNG."""
 
-    # Cache global: no volver a dibujar una cuadrícula idéntica
-    _cache = {}
+    # Cache global: cada carpeta de frames se carga UNA sola vez
+    _loaded: dict[str, list[pygame.Surface]] = {}
 
-    def __init__(self, frames, palette, pixel_size=6, fps=6, loop=True):
+    def __init__(self, surfaces: list[pygame.Surface],
+                 fps: float = 6.0, loop: bool = True) -> None:
         """
         Args:
-            frames:      lista de cuadrículas (cada una = lista de strings)
-            palette:     dict carácter → color (R,G,B)
-            pixel_size:  tamaño en pantalla de cada "píxel" del dibujo
-            fps:         frames por segundo de la animación
-            loop:        ¿repetir en bucle? (False para animaciones de golpe)
+            surfaces: lista de imágenes ya cargadas (una por frame)
+            fps:      frames por segundo de la animación
+            loop:     ¿repetir en bucle? (False para animaciones de golpe)
         """
-        self.pixel_size = pixel_size
-        self.fps = max(1, fps)
+        self.surfaces = surfaces
+        self.fps = max(1.0, fps)
         self.loop = loop
-        self.surfaces = [self._build(f, palette) for f in frames]
         self.frame_index = 0
         self.timer = 0.0
-        self.finished = not self.loop and len(self.surfaces) <= 1
+        self.finished = not loop and len(surfaces) <= 1
 
     # ------------------------------------------------------------------ #
+    #  Carga
+    # ------------------------------------------------------------------ #
     @classmethod
-    def _build(cls, grid, palette):
-        """Convierte una cuadrícula de caracteres en una Surface de Pygame."""
-        key = (tuple(grid), tuple(sorted(palette.items())))
-        if key in cls._cache:
-            return cls._cache[key]
+    def load(cls, anim_dir: Path | str, fps: float = 6.0,
+             loop: bool = True) -> "AnimatedSprite":
+        """Carga los frames (frame0.png, frame1.png, ...) de una carpeta.
 
-        h = len(grid)
-        w = max(len(row) for row in grid)
-        surface = pygame.Surface((w, h), pygame.SRCALPHA)
-        for y, row in enumerate(grid):
-            for x, char in enumerate(row):
-                if char != "." and char in palette:
-                    surface.set_at((x, y), palette[char])
-        cls._cache[key] = surface
+        Si la carpeta no existe o está vacía, se usa un cuadro morado
+        como marcador visible (fácil de detectar mientras se corrige).
+        """
+        folder = Path(anim_dir)
+        cache_key = str(folder.resolve())
+        if cache_key not in cls._loaded:
+            cls._loaded[cache_key] = cls._load_frames(folder)
+        return cls(cls._loaded[cache_key], fps=fps, loop=loop)
+
+    @staticmethod
+    def _load_frames(folder: Path) -> list[pygame.Surface]:
+        """Lee los PNG de la carpeta, ordenados por número de frame."""
+        frame_paths = sorted(folder.glob("frame*.png"),
+                             key=lambda path: int(path.stem.removeprefix("frame") or 0))
+        if not frame_paths:
+            return [AnimatedSprite._placeholder()]
+        return [pygame.image.load(str(path)).convert_alpha()
+                for path in frame_paths]
+
+    @staticmethod
+    def _placeholder() -> pygame.Surface:
+        """Cuadro morado 12x12 que avisa de un sprite faltante."""
+        surface = pygame.Surface((12, 12), pygame.SRCALPHA)
+        surface.fill((200, 60, 220))
         return surface
 
     # ------------------------------------------------------------------ #
-    def height_px(self):
-        """Altura en pantalla del frame actual (píxeles del dibujo × pixel_size)."""
-        return self.surfaces[self.frame_index].get_height() * self.pixel_size
+    #  Información del frame actual
+    # ------------------------------------------------------------------ #
+    @property
+    def current(self) -> pygame.Surface:
+        """Imagen del frame que se está mostrando."""
+        return self.surfaces[self.frame_index]
 
-    def scale(self):
-        """Devuelve el frame actual escalado al pixel_size, con bordes nítidos."""
-        surf = self.surfaces[self.frame_index]
-        w = surf.get_width() * self.pixel_size
-        h = surf.get_height() * self.pixel_size
-        return pygame.transform.scale(surf, (w, h))
+    def height_px(self) -> int:
+        """Altura en pantalla del frame actual (para anclar a los pies)."""
+        return self.current.get_height()
 
-    def update(self, dt):
+    # ------------------------------------------------------------------ #
+    #  Reproducción
+    # ------------------------------------------------------------------ #
+    def update(self, dt: float) -> None:
         """Avanza la animación según el tiempo transcurrido."""
         if self.finished or len(self.surfaces) <= 1:
             return
@@ -95,14 +107,14 @@ class AnimatedSprite:
                     self.frame_index = len(self.surfaces) - 1
                     self.finished = True
 
-    def render(self, screen, x, y, center=True):
+    def render(self, screen: pygame.Surface, x: int, y: int,
+               center: bool = True) -> None:
         """Dibuja el frame actual. Si center=True, (x, y) es el centro."""
-        img = self.scale()
-        rect = img.get_rect()
+        rect = self.current.get_rect()
         rect.center = (x, y) if center else (x, y)
-        screen.blit(img, rect)
+        screen.blit(self.current, rect)
 
-    def reset(self):
+    def reset(self) -> None:
         """Reinicia la animación desde el primer frame."""
         self.frame_index = 0
         self.timer = 0.0
