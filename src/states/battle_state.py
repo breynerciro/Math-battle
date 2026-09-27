@@ -16,12 +16,13 @@ import pygame
 
 from .. import config
 from ..combat.combat_system import CombatSystem
-from ..combat.effects import FloatingText, ParticleSystem, ScreenShake
+from ..combat.effects import FloatingText, HitStop, ParticleSystem, ScreenShake, FlashEffect
 from ..entities.enemies import get_level_enemies
 from ..entities.player import Player
 from ..ui.background import get_background
 from ..ui.button import Button
 from ..ui.hud import HUD
+from ..ui.scenario import Scenario
 from ..ui.sound_manager import SoundManager
 from ..ui.transition import Transition
 from .base_state import BaseState
@@ -46,7 +47,10 @@ class BattleState(BaseState):
         self.hud = HUD(game)
         self.particles = ParticleSystem()
         self.shake = ScreenShake()
+        self.hitstop = HitStop()
+        self.flash = FlashEffect()
         self.floating = []                     # textos flotantes activos
+        self.scenario = Scenario(level)        # escenario dinámico con parallax
 
         # Si venimos de un reintento, el héroe se recupera por completo
         if self.game.player is None or self.game.player.lives <= 0:
@@ -130,18 +134,21 @@ class BattleState(BaseState):
             player.play("attack")
             self.sounds.play("attack")
             self.particles.burst(self.ENEMY_X, self._feet_y(enemy) - 30,
-                                 color=config.YELLOW)
+                                 color=config.YELLOW, count=18, speed=140)
             if result["enemy_died"]:
                 self.enemy_death_timer = 1.2
+                self.flash.trigger(config.YELLOW, 100)
+                self.hitstop.trigger(0.08)
             self.floating.append(FloatingText(
                 f"-{result['damage']}", self.ENEMY_X,
                 self._feet_y(enemy) - 90, config.YELLOW, config.FONT_SIZE_LARGE))
             self.floating.append(FloatingText(
                 f"+{result['points']}", self.HERO_X,
                 self._feet_y(player) - 110, config.GREEN, config.FONT_SIZE_SMALL))
-            self.shake.trigger(0.25, 5)
+            direction = (self.ENEMY_X - self.HERO_X, 0)
+            self.shake.trigger(0.25, 6, direction=direction)
             if result["enemy_died"]:
-                self.wait_timer = 1.2      # deja ver la muerte del enemigo
+                self.wait_timer = 1.2
             else:
                 self.wait_timer = 0.6
         else:
@@ -149,15 +156,18 @@ class BattleState(BaseState):
                 self.sounds.play("timeout")
             player.play("hurt")
             self.sounds.play("hit")
-            self.shake.trigger(0.4, 8)
+            direction = (self.HERO_X - self.ENEMY_X, 0)
+            self.shake.trigger(0.4, 9, direction=direction)
             self.particles.burst(self.HERO_X, self._feet_y(player) - 30,
-                                 color=config.RED)
+                                 color=config.RED, count=16, speed=130)
+            self.flash.trigger(config.RED, 80)
+            self.hitstop.trigger(0.06)
             self.floating.append(FloatingText(
                 f"-{result['damage']}", self.HERO_X,
                 self._feet_y(player) - 100, config.RED, config.FONT_SIZE_LARGE))
             if result["player_died"]:
                 self.death_pending = True
-                self.wait_timer = 1.2    # deja ver la caída del héroe
+                self.wait_timer = 1.2
             else:
                 self.wait_timer = 0.8
 
@@ -216,9 +226,15 @@ class BattleState(BaseState):
         player = self.game.player
         enemy = self.current_enemy
 
+        if self.hitstop.active():
+            self.hitstop.update(dt)
+            return
+
         self.transition.update(dt)
         self.shake.update(dt)
         self.particles.update(dt)
+        self.flash.update(dt)
+        self.scenario.update(dt)
         player.update(dt)
         enemy.update(dt)
 
@@ -258,8 +274,8 @@ class BattleState(BaseState):
         # Screen shake: desplaza todo el mundo un poco
         offset_x, offset_y = self.shake.get_offset()
 
-        # Fondo del nivel (cacheado)
-        screen.blit(get_background(self.level), (offset_x, offset_y))
+        # Escenario dinámico con parallax y partículas ambientales
+        self.scenario.render(screen, offset_x, offset_y)
 
         # Personajes, DE PIE sobre el suelo (anclados por los pies)
         self.game.player.draw(screen, self.HERO_X + offset_x,
@@ -290,6 +306,9 @@ class BattleState(BaseState):
         self.attack_button.update()          # hover check cada frame
         self.attack_button.render(screen, self.game.get_font(
             self.attack_button.font_size))
+
+        # Efecto de flash (después de todo lo demás)
+        self.flash.render(screen)
 
         # Transición (velo negro, SIEMPRE al final)
         self.transition.render(screen)

@@ -1,66 +1,125 @@
 """
-transition.py — Transiciones con fade entre pantallas
-=====================================================
+transition.py — Transiciones temáticas con easing
+==================================================
 
-Un "velo" negro que se oscurece y aclara. Se usa así:
-
-    transition = Transition()
-    transition.start(callback=mi_funcion)
-    # en update:  transition.update(dt)   → llama al callback a mitad del fade
-    # en render:  transition.render(screen)  (¡al final, para tapar todo!)
+Transiciones mejoradas con game-juice:
+- Easing curves (ease-in-out-cubic)
+- Estilos temáticos por nivel
+- Efectos de partículas durante la transición
+- Variación visual según el contexto
 """
+
+import math
+import random
 
 import pygame
 
 from .. import config
 
 
-class Transition:
-    """Fade a negro → ejecuta un callback → fade de vuelta."""
+def ease_in_out_cubic(t):
+    """Curva de easing suave para transiciones naturales."""
+    if t < 0.5:
+        return 4 * t * t * t
+    else:
+        return 1 - pow(-2 * t + 2, 3) / 2
 
-    FADE_IN = 0    # oscureciéndose
-    OUT = 1        # aclarándose
+
+class Transition:
+    """Transición temática con easing y efectos visuales."""
+
+    FADE_IN = 0
+    OUT = 1
     DONE = 2
 
-    def __init__(self, duration=0.4):
+    def __init__(self, duration=0.5, style="default"):
         self.duration = duration
+        self.style = style
         self.phase = self.DONE
         self.alpha = 0
+        self.progress = 0.0
         self.callback = None
+        self.particles = []
 
-    def start(self, callback):
-        """Inicia la transición. El callback corre cuando la pantalla
-        está totalmente negra (momento perfecto para cambiar de estado)."""
+    def start(self, callback, style=None):
+        if style:
+            self.style = style
         self.callback = callback
         self.phase = self.FADE_IN
         self.alpha = 0
+        self.progress = 0.0
+        self.particles = []
+        self._spawn_transition_particles()
 
     def active(self):
         return self.phase != self.DONE
 
-    # ------------------------------------------------------------------ #
+    def _spawn_transition_particles(self):
+        for _ in range(20):
+            self.particles.append({
+                "x": random.randint(0, config.SCREEN_WIDTH),
+                "y": random.randint(0, config.SCREEN_HEIGHT),
+                "vx": random.uniform(-100, 100),
+                "vy": random.uniform(-100, 100),
+                "size": random.randint(2, 6),
+                "life": random.uniform(0.3, 0.8),
+                "max_life": random.uniform(0.3, 0.8),
+            })
+
     def update(self, dt):
         if not self.active():
             return
-        speed = 255 / self.duration       # alpha por segundo
+
         if self.phase == self.FADE_IN:
-            self.alpha += speed * dt
-            if self.alpha >= 255:
+            self.progress += dt / (self.duration * 0.5)
+            self.progress = min(1.0, self.progress)
+            self.alpha = int(255 * ease_in_out_cubic(self.progress))
+
+            if self.progress >= 1.0:
                 self.alpha = 255
                 if self.callback:
-                    self.callback()        # cambio de estado en negro
+                    self.callback()
                     self.callback = None
                 self.phase = self.OUT
+                self.progress = 0.0
         else:
-            self.alpha -= speed * dt
-            if self.alpha <= 0:
+            self.progress += dt / (self.duration * 0.5)
+            self.progress = min(1.0, self.progress)
+            self.alpha = int(255 * (1 - ease_in_out_cubic(self.progress)))
+
+            if self.progress >= 1.0:
                 self.alpha = 0
                 self.phase = self.DONE
 
-    # ------------------------------------------------------------------ #
+        for p in self.particles:
+            p["x"] += p["vx"] * dt
+            p["y"] += p["vy"] * dt
+            p["life"] -= dt
+        self.particles = [p for p in self.particles if p["life"] > 0]
+
     def render(self, screen):
-        if self.alpha > 0:
-            veil = pygame.Surface(screen.get_size())
-            veil.fill(config.BLACK)
-            veil.set_alpha(int(self.alpha))
-            screen.blit(veil, (0, 0))
+        if self.alpha <= 0:
+            return
+
+        color = self._get_transition_color()
+        veil = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        veil.fill((*color, self.alpha))
+        screen.blit(veil, (0, 0))
+
+        for p in self.particles:
+            alpha = int(200 * (p["life"] / p["max_life"]))
+            particle_color = (*color, alpha)
+            pygame.draw.rect(screen, particle_color,
+                           (int(p["x"]), int(p["y"]), p["size"], p["size"]))
+
+    def _get_transition_color(self):
+        color_map = {
+            1: config.GREEN,
+            2: config.CYAN,
+            3: config.PURPLE,
+            4: config.DARK_GREEN,
+            5: config.RED,
+        }
+        if isinstance(self.style, int):
+            return color_map.get(self.style, config.BLACK)
+        return config.BLACK
