@@ -1,16 +1,24 @@
 """
-level_select_state.py — Mapa de selección de niveles mejorado
-=============================================================
+level_select_state.py — Mapa de selección de niveles
+====================================================
 
-Tarjetas de nivel con animaciones, efectos de hover y feedback visual
-aplicando principios de game-juice.
+Las 5 tarjetas del juego, una por nivel. Cada tarjeta es una "ventana"
+al escenario de ese nivel: la miniatura ES el fondo de batalla real
+(assets/backgrounds/level<N>.png), así que el jugador reconoce el sitio
+antes de entrar.
+
+Efectos aplicados (game-juice): resplandor pulsante, ampliación al
+pasar el ratón, rebote al hacer clic y bloqueo visible de los niveles
+que aún no se han desbloqueado.
 """
 
 import math
+
 import pygame
 
 from .. import config
 from ..ui.button import Button
+from ..ui.background import get_background
 from ..ui.sound_manager import SoundManager
 from .base_state import BaseState
 from .battle_state import BattleState
@@ -23,13 +31,17 @@ LEVEL_INFO = {
     5: ("El Castillo del Caos", "álgebra"),
 }
 
-LEVEL_ICONS = {
-    1: "🌳",
-    2: "⛏️",
-    3: "🏛️",
-    4: "🌉",
-    5: "🏰",
-}
+# Miniaturas cacheadas: se escalan UNA vez por nivel y por sesión
+_thumbs: dict = {}
+
+
+def _thumb(level: int, w: int, h: int):
+    """Miniatura del fondo del nivel, escalada a (w, h) y cacheada."""
+    key = (level, w, h)
+    if key not in _thumbs:
+        _thumbs[key] = pygame.transform.smoothscale(get_background(level),
+                                                    (w, h))
+    return _thumbs[key]
 
 
 class LevelCard:
@@ -80,8 +92,9 @@ class LevelCard:
 class LevelSelectState(BaseState):
     """Selección de nivel con tarjetas animadas y feedback visual."""
 
-    CARD_W, CARD_H = 200, 170
-    GAP = 24
+    CARD_W, CARD_H = 216, 200
+    GAP = 26
+    THUMB_H = 92                 # alto de la miniatura dentro de la tarjeta
 
     def __init__(self, game):
         """Crea las 5 tarjetas de nivel (una fila de 3 y otra de 2)."""
@@ -156,16 +169,9 @@ class LevelSelectState(BaseState):
             card.update(dt)
 
     def render(self, screen):
-        """Dibuja fondo, título, récord y las 5 tarjetas."""
+        """Dibuja fondo, cabecera, las 5 tarjetas y el botón VOLVER."""
         self._render_background(screen)
-
-        self.draw_text(screen, "SELECCIONA NIVEL", config.FONT_SIZE_LARGE,
-                       config.YELLOW, config.SCREEN_WIDTH // 2, 62, center=True)
-        self.draw_text(screen,
-                       f"Récord: {self.save_data.get('high_score', 0)} pts   •   "
-                       f"Progreso: nivel {self.highest}",
-                       config.FONT_SIZE_SMALL, config.LIGHT_GRAY,
-                       config.SCREEN_WIDTH // 2, 104, center=True)
+        self._render_header(screen)
 
         for card in self.cards:
             self._render_card(screen, card)
@@ -173,63 +179,128 @@ class LevelSelectState(BaseState):
         self.back_button.render(screen, self.game.get_font(
             self.back_button.font_size))
 
+    # ------------------------------------------------------------------ #
     def _render_background(self, screen):
-        """Fondo azul nocturno con estrellas que parpadean."""
-        screen.fill(config.DARK_BLUE)
+        """Cielo nocturno en bandas con estrellas que parpadean."""
+        top, bottom = (6, 8, 24), (26, 32, 74)
+        bands = 14
+        h = config.SCREEN_HEIGHT // bands
+        for i in range(bands):
+            t = i / (bands - 1)
+            col = tuple(int(a + (b - a) * t) for a, b in zip(top, bottom))
+            y = i * h
+            height = h if i < bands - 1 else config.SCREEN_HEIGHT - y
+            pygame.draw.rect(screen, col, (0, y, config.SCREEN_WIDTH, height))
 
-        for i in range(30):
-            x = int((i * 73 + self.time * 10) % config.SCREEN_WIDTH)
-            y = int((i * 47 + math.sin(self.time + i) * 5) % config.SCREEN_HEIGHT)
-            size = 1 + (i % 3)
-            alpha = int(100 + 50 * math.sin(self.time * 2 + i))
-            star_color = (*config.WHITE, alpha)
-            pygame.draw.circle(screen, star_color, (x, y), size)
+        for i in range(34):
+            x = int((i * 73 + self.time * 8) % config.SCREEN_WIDTH)
+            y = int((i * 47 + math.sin(self.time + i) * 5) % 300)
+            alpha = int(110 + 60 * math.sin(self.time * 2 + i))
+            pygame.draw.circle(screen, (214, 222, 255, alpha), (x, y),
+                               1 + (i % 2))
+
+    def _render_header(self, screen):
+        """Cabecera: placa con el título y el progreso del jugador."""
+        cx = config.SCREEN_WIDTH // 2
+        plate = pygame.Rect(cx - 340, 26, 680, 96)
+        pygame.draw.rect(screen, (16, 18, 44), plate, border_radius=10)
+        pygame.draw.rect(screen, config.YELLOW, plate, 3, border_radius=10)
+        inner = plate.inflate(-10, -10)
+        pygame.draw.rect(screen, (74, 78, 146), inner, 2, border_radius=7)
+
+        # Título con sombra dura: PRIMERO la sombra negra (desplazada)
+        # y DESPUÉS el texto amarillo encima. Si se dibujan al revés la
+        # sombra tapa las letras y el título se lee negro sobre azul.
+        self.draw_text(screen, "SELECCIÓN DE NIVEL", config.FONT_SIZE_LARGE,
+                       config.BLACK, cx + 4, 66, center=True)
+        self.draw_text(screen, "SELECCIÓN DE NIVEL", config.FONT_SIZE_LARGE,
+                       config.YELLOW, cx, 62, center=True)
+
+        high = self.save_data.get("high_score", 0)
+        self.draw_text(screen,
+                       f"RÉCORD: {high} PTS   ·   "
+                       f"NIVEL MÁS ALTO: {self.highest}/{config.TOTAL_LEVELS}",
+                       config.FONT_SIZE_SMALL, config.CYAN,
+                       cx, 100, center=True)
 
     def _render_card(self, screen, card):
-        """Dibuja UNA tarjeta: glow, borde, número, nombre y estrellas."""
+        """Dibuja UNA tarjeta: resplandor, miniatura, insignia y textos."""
         render_rect = card.get_render_rect()
         unlocked = card.unlocked
         level = card.level
+        color = config.LEVEL_COLORS[level] if unlocked else config.GRAY
 
-        glow_intensity = int(40 + 20 * math.sin(card.glow_pulse))
+        # Resplandor pulsante alrededor de las tarjetas desbloqueadas
         if unlocked:
-            glow_color = config.LEVEL_COLORS[level]
-            glow_surface = pygame.Surface((render_rect.width + 20, render_rect.height + 20), pygame.SRCALPHA)
-            pygame.draw.rect(glow_surface, (*glow_color, glow_intensity),
-                           (0, 0, render_rect.width + 20, render_rect.height + 20),
-                           border_radius=14)
-            screen.blit(glow_surface, (render_rect.x - 10, render_rect.y - 10))
+            glow_intensity = int(46 + 24 * math.sin(card.glow_pulse))
+            glow = pygame.Surface((render_rect.width + 24,
+                                   render_rect.height + 24), pygame.SRCALPHA)
+            pygame.draw.rect(glow, (*config.LEVEL_COLORS[level],
+                                    glow_intensity),
+                             (0, 0, glow.width, glow.height),
+                             border_radius=14)
+            screen.blit(glow, (render_rect.x - 12, render_rect.y - 12))
 
-        color = config.LEVEL_COLORS[level] if unlocked else config.DARK_GRAY
-        border = config.YELLOW if unlocked else config.GRAY
-        border_width = 4 if unlocked else 2
+        # Cuerpo de la tarjeta (marco del color del nivel)
+        body = (26, 28, 58) if unlocked else (36, 36, 46)
+        pygame.draw.rect(screen, body, render_rect, border_radius=10)
 
-        pygame.draw.rect(screen, color, render_rect, border_radius=10)
-        pygame.draw.rect(screen, border, render_rect, border_width, border_radius=10)
+        # MINIATURA: el fondo real del nivel (el jugador ya sabe a dónde va)
+        thumb = pygame.Rect(render_rect.x + 6, render_rect.y + 6,
+                            render_rect.w - 12, self.THUMB_H)
+        screen.blit(_thumb(level, thumb.w, thumb.h), thumb.topleft)
+        pygame.draw.rect(screen, color, thumb, 2)
 
+        # ZONA DE TEXTO SIEMPRE OSCURA: un panel casi negro detrás de nombre,
+        # tema y estrellas. Sin él el texto se apoya en el cuerpo de la
+        # tarjeta (y en las tarjetas cerradas, en gris sobre gris) y no se
+        # lee; con él el contraste es el mismo en las 5 tarjetas.
+        scrim = pygame.Rect(render_rect.x + 4, thumb.bottom + 3,
+                            render_rect.w - 8,
+                            render_rect.bottom - thumb.bottom - 7)
+        pygame.draw.rect(screen, (10, 12, 26), scrim, border_radius=8)
+
+        # Marco del nivel, dibujado el último para que quede limpio
+        pygame.draw.rect(screen, color, render_rect, 4 if unlocked else 2,
+                         border_radius=10)
+
+        if not unlocked:
+            veil = pygame.Surface(thumb.size, pygame.SRCALPHA)
+            veil.fill((0, 0, 0, 150))
+            screen.blit(veil, thumb.topleft)
+            label = self.game.get_font(config.FONT_SIZE_SMALL).render(
+                "BLOQUEADO", True, (226, 228, 238))
+            screen.blit(label, label.get_rect(center=thumb.center))
+
+        # Insignia con el número del nivel (esquina superior izquierda):
+        # relleno casi negro + anillo del color del nivel, para que el
+        # número se lea igual de bien en los 5 colores.
+        badge_center = (thumb.x + 18, thumb.y + 18)
+        pygame.draw.circle(screen, (10, 12, 26), badge_center, 15)
+        pygame.draw.circle(screen, color, badge_center, 15, 3)
+        self.draw_text(screen, str(level), config.FONT_SIZE_SMALL,
+                       config.WHITE if unlocked else config.LIGHT_GRAY,
+                       *badge_center, center=True)
+
+        # Nombre del nivel y tema matemático (debajo de la miniatura)
         name, topic = LEVEL_INFO[level]
         cx = render_rect.centerx
-
-        if unlocked:
-            self.draw_text(screen, str(level), config.FONT_SIZE_TITLE,
-                           config.WHITE, cx, render_rect.y + 36, center=True)
-        else:
-            self.draw_text(screen, "🔒", config.FONT_SIZE_LARGE,
-                           config.GRAY, cx, render_rect.y + 36, center=True)
-
-        ny = render_rect.y + 66
-        for line in self._wrap(name, config.FONT_SIZE_SMALL, self.CARD_W - 16):
-            self.draw_text(screen, line, config.FONT_SIZE_SMALL,
-                           config.WHITE if unlocked else config.GRAY,
+        name_color = config.WHITE if unlocked else (190, 194, 206)
+        topic_color = (206, 212, 228) if unlocked else (156, 160, 176)
+        ny = thumb.bottom + 12
+        for line in self._wrap(name, config.FONT_SIZE_SMALL,
+                               self.CARD_W - 16)[:2]:
+            self.draw_text(screen, line, config.FONT_SIZE_SMALL, name_color,
                            cx, ny, center=True)
-            ny += 18
-        for line in self._wrap(topic, config.FONT_SIZE_SMALL, self.CARD_W - 16):
-            self.draw_text(screen, line, config.FONT_SIZE_SMALL,
-                           config.LIGHT_GRAY if unlocked else config.GRAY,
-                           cx, ny + 4, center=True)
-            ny += 16
+            ny += 17
+        for line in self._wrap(topic, config.FONT_SIZE_SMALL,
+                               self.CARD_W - 16)[:2]:
+            self.draw_text(screen, line, config.FONT_SIZE_SMALL, topic_color,
+                           cx, ny + 2, center=True)
+            ny += 17
 
+        # Estrellas del nivel (se ganan al completarlo)
         stars = "★" * level
         self.draw_text(screen, stars, config.FONT_SIZE_SMALL,
-                       config.YELLOW if unlocked else config.GRAY,
-                       cx, render_rect.bottom - 24, center=True)
+                       config.YELLOW if unlocked else (156, 160, 176),
+                       cx, render_rect.bottom - 22, center=True)

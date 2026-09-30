@@ -28,6 +28,13 @@ class SoundManager:
 
     _generated = False       # ¿ya generamos los .wav en esta sesión?
 
+    # Estado global de la MÚSICA (compartido por TODAS las instancias:
+    # cada pantalla crea su propio SoundManager, pero el silencio tiene
+    # que verse en todas al mismo tiempo).
+    _muted = False           # True = música apagada
+    _track = None            # música que debería sonar ('menu', 'battle'...)
+    _loop = True
+
     def __init__(self):
         """Arranca el mezclador de audio y prepara los efectos."""
         if not pygame.mixer.get_init():
@@ -120,6 +127,50 @@ class SoundManager:
                 cls._save_wav(path, samples)
 
     # ------------------------------------------------------------------ #
+    #  Silenciado de la música (botón MÚSICA del menú)
+    # ------------------------------------------------------------------ #
+    @classmethod
+    def is_muted(cls) -> bool:
+        """True si la música está apagada."""
+        return cls._muted
+
+    @classmethod
+    def set_muted(cls, muted: bool) -> None:
+        """Apaga o enciende la música de fondo.
+
+        Al apagar se usa `music.pause()` (y no `stop()`) para conservar
+        el punto de la melodía: si el jugador la reactiva, la música
+        sigue donde estaba. Si nunca llegó a sonar, al reactivar se
+        carga y se arranca desde el principio.
+        """
+        cls._muted = muted
+        try:
+            if muted:
+                pygame.mixer.music.pause()
+            else:
+                pygame.mixer.music.unpause()
+                if cls._track and not pygame.mixer.music.get_busy():
+                    cls._start(cls._track, cls._loop)
+        except pygame.error:
+            pass        # sin audio disponible: el juego sigue igual
+
+    @classmethod
+    def toggle_mute(cls) -> bool:
+        """Alterna el silencio y devuelve su nuevo estado."""
+        cls.set_muted(not cls._muted)
+        return cls._muted
+
+    @classmethod
+    def _start(cls, name: str, loop: bool) -> None:
+        """Carga y arranca la música `name` (si los archivos existen)."""
+        path = os.path.join(config.SOUNDS_DIR, "music", f"{name}.wav")
+        try:
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.play(-1 if loop else 0)
+        except (pygame.error, FileNotFoundError):
+            pass        # sin música, el juego sigue
+
+    # ------------------------------------------------------------------ #
     #  Reproducción
     # ------------------------------------------------------------------ #
     def play(self, name):
@@ -133,21 +184,26 @@ class SoundManager:
             pass    # sin audio, el juego sigue
 
     def play_music(self, name, loop=True):
-        """Reproduce música de fondo: 'menu', 'battle' o 'boss'."""
-        if self.current_music == name:
-            return
-        path = os.path.join(config.SOUNDS_DIR, "music", f"{name}.wav")
-        try:
-            pygame.mixer.music.load(path)
-            pygame.mixer.music.play(-1 if loop else 0)
-            self.current_music = name
-        except (pygame.error, FileNotFoundError):
-            pass
+        """Reproduce música de fondo: 'menu', 'battle' o 'boss'.
+
+        Si la música está apagada, solo se anota CUÁL debería sonar:
+        empezará al volver a activarla.
+        """
+        cls = SoundManager
+        if cls._track == name:
+            return                      # ya es la música en curso
+        cls._track = name
+        cls._loop = loop
+        self.current_music = name
+        if cls._muted:
+            return                      # apagada: sonará al reactivar
+        cls._start(name, loop)
 
     def stop_music(self):
         """Detiene la música de fondo (si el audio está disponible)."""
         try:
             pygame.mixer.music.stop()
-            self.current_music = None
         except pygame.error:
             pass
+        self.current_music = None
+        SoundManager._track = None

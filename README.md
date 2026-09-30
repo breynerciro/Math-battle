@@ -1,6 +1,6 @@
-# 🎮 El Héroe de las Matemáticas
+# 🎮 Math Battle
 
-**El Héroe de las Matemáticas** es un videojuego educativo de combate
+**Math Battle** es un videojuego educativo de combate
 estilo RPG retro (pixel art 16-bit) hecho en **Python + Pygame**:
 enfrentas a monstruos resolviendo retos de opción múltiple (A, B, C, D).
 Responder bien = hechizo de 25 de daño; responder mal = contraataque de

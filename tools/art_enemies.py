@@ -1,4 +1,4 @@
-"""Los enemigos de El Héroe de las Matemáticas, dibujados píxel a píxel.
+"""Los enemigos de Math Battle, dibujados píxel a píxel.
 
 Todos ocupan un lienzo de 32x32 y se guardan escalados x5 (160x160), con
 la misma convención que el héroe: la luz cae de ARRIBA a la izquierda, la

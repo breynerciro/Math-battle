@@ -18,7 +18,7 @@ from enum import Enum
 class MathTopic(Enum):
     """Los 5 temas matemáticos, uno por nivel del juego.
 
-    El orden ES el orden de los niveles del "El Héroe de las Matemáticas":
+    El orden ES el orden de los niveles de Math Battle:
         1 Bosque de las Sumas          sumas y restas
         2 Mina de la Multiplicación    ×, ÷ y problemas de lógica
         3 Templo de las Fracciones     fracciones

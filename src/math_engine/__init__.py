@@ -1,5 +1,5 @@
 """
-Motor matemático de El Héroe de las Matemáticas
+Motor matemático de Math Battle
 ===============================
 
 Uso desde el resto del juego:

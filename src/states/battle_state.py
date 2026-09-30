@@ -7,9 +7,9 @@ Orquesta todo lo que se ve en una batalla, en una sola pantalla:
 - SECCIÓN SUPERIOR: fondo del nivel, héroe (izquierda) con su barra de
   HP, enemigo (derecha) con la suya, HUD, mensajes y efectos.
 - SECCIÓN INFERIOR: panel RPG clásico con la pregunta matemática, las
-  4 opciones (A, B, C, D) y, a la derecha, los botones de menú
-  ATACAR / MAGIA / OBJETOS / HUIR. La esquina inferior derecha guarda
-  el panel de feedback ("CORRECT: MAGIC 25 DMG" / "INCORRECT: ...").
+  4 opciones (A, B, C, D) y, a la derecha, los botones ATACAR y HUIR.
+  La esquina inferior derecha guarda el panel de feedback
+  ("CORRECT: MAGIC 25 DMG" / "INCORRECT: ...").
 
 El flujo de turnos lo calcula CombatSystem; esta clase solo lo
 "dibuja y lo hace bonito".
@@ -76,9 +76,10 @@ class BattleState(BaseState):
         self.feedback_color = config.WHITE
         self.feedback_timer = 0.0
 
-        # Botones de menú RPG (derecha del panel)
+        # Botones de menú (derecha del panel): solo ATACAR y HUIR.
+        # MAGIA y OBJETOS no son parte del diseño del juego.
         def menu(i, text, on_click, color, hover):
-            """Crea un botón de la columna derecha: i es su posición (0-3)."""
+            """Crea un botón de la columna derecha: i es su posición (0-1)."""
             return Button(config.MENU_X,
                           config.MENU_Y + i * config.MENU_BTN_STEP,
                           config.MENU_W, config.MENU_BTN_H, text,
@@ -87,16 +88,9 @@ class BattleState(BaseState):
 
         self.attack_button = menu(0, "» ATACAR «", self._open_challenge,
                                   config.DARK_RED, config.RED)
-        self.magic_button = menu(1, "MAGIA",
-                                 self._not_ready("La magia aún no está lista"),
-                                 config.DARK_BLUE, config.BLUE)
-        self.items_button = menu(2, "OBJETOS",
-                                 self._not_ready("Aún no tienes objetos"),
-                                 config.DARK_BLUE, config.BLUE)
-        self.flee_button = menu(3, "HUIR", self._flee,
+        self.flee_button = menu(1, "HUIR", self._flee,
                                 config.DARK_GRAY, config.GRAY)
-        self.menu_buttons = (self.attack_button, self.magic_button,
-                             self.items_button, self.flee_button)
+        self.menu_buttons = (self.attack_button, self.flee_button)
 
         # 4 opciones de respuesta (A, B, C, D): clic o teclas 1-4
         self.option_buttons = []
@@ -197,15 +191,6 @@ class BattleState(BaseState):
         self.feedback_timer = 3.0
 
         self._receive_result(result)
-
-    def _not_ready(self, text):
-        """MAGIA/OBJETOS: funcionalidad fuera del alcance del prototipo."""
-        def handler():
-            """Muestra el mensaje de "próximamente" en la pantalla."""
-            self.sounds.play("wrong")
-            self.message = text
-            self.message_timer = 1.5
-        return handler
 
     def _flee(self):
         """HUIR: abandona la batalla y vuelve al mapa de niveles."""
@@ -323,7 +308,7 @@ class BattleState(BaseState):
                     if event.key in key_map:
                         self._choose_option(key_map[event.key])
 
-            # Botones del menú (ATACAR/MAGIA/OBJETOS/HUIR)
+            # Botones del panel (ATACAR / HUIR)
             for button in self.menu_buttons:
                 button.handle_event(event)
 

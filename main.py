@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py — El Héroe de las Matemáticas
+main.py — Math Battle
 ======================================
 
 Punto de entrada del juego. Ejecuta desde la raíz del proyecto:

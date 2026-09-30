@@ -1,6 +1,6 @@
 """
-config.py — Constantes globales de El Héroe de las Matemáticas
-================================================
+config.py — Constantes globales de Math Battle
+===============================================
 
 Aquí vive TODO lo que se puede ajustar "girando una perilla":
 resolución, colores, tiempos, daño, etc.
@@ -31,7 +31,7 @@ SAVE_FILE = os.path.join(BASE_DIR, "save_data.json")
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
-TITLE = "El Héroe de las Matemáticas"
+TITLE = "Math Battle"
 GROUND_Y = 418    # línea del suelo en la batalla (los pies de los personajes)
 
 # ---------------------------------------------------------------------------
@@ -52,12 +52,14 @@ OPTION_W = 364
 OPTION_H = 60
 OPTION_GAP = 12
 
-# Zona derecha del panel: botones de menú clásico + feedback
+# Zona derecha del panel: botones de menú (ATACAR / HUIR) + feedback
+# Solo estos dos botones existen: MAGIA y OBJETOS quedaron fuera del
+# diseño, así que el hueco se aprovecha con botones más altos.
 MENU_X = 800
 MENU_W = SCREEN_WIDTH - PANEL_X - 20 - MENU_X   # 444
 MENU_Y = 452
-MENU_BTN_H = 44
-MENU_BTN_GAP = 8
+MENU_BTN_H = 64
+MENU_BTN_GAP = 16
 MENU_BTN_STEP = MENU_BTN_H + MENU_BTN_GAP   # paso vertical entre botones
 FEEDBACK_RECT = (MENU_X, 664, MENU_W, 32)  # esquina inferior derecha
 

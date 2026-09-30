@@ -395,7 +395,7 @@ def _block_wall(c: Canvas, base_color, joint, y0: int = 0,
 
 
 # ---------------------------------------------------------------------------
-#  Los cinco niveles — los escenarios del "El Héroe de las Matemáticas"
+#  Los cinco niveles — los escenarios de Math Battle
 # ---------------------------------------------------------------------------
 def level1() -> Canvas:
     """El Bosque de las Sumas: bosque verde y vibrante a plena luz
