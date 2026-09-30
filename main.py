@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def main():
+    """Crea el juego y arranca el bucle principal hasta que se cierre."""
     try:
         from src.game import Game
     except ImportError as e:

@@ -33,6 +33,7 @@ class Transition:
     DONE = 2
 
     def __init__(self, duration=0.5, style="default"):
+        """Crea una transición apagada (duration en segundos)."""
         self.duration = duration
         self.style = style
         self.phase = self.DONE
@@ -42,6 +43,8 @@ class Transition:
         self.particles = []
 
     def start(self, callback, style=None):
+        """Arranca el fundido: `callback` se llama al llegar al negro
+        (ahí es donde el juego cambia de pantalla)."""
         if style:
             self.style = style
         self.callback = callback
@@ -51,10 +54,12 @@ class Transition:
         self.particles = []
         self._spawn_transition_particles()
 
-    def active(self):
+    def active(self) -> bool:
+        """True mientras el fundido sigue en marcha."""
         return self.phase != self.DONE
 
     def _spawn_transition_particles(self):
+        """Crea las partículas que revolotean durante el fundido."""
         for _ in range(20):
             self.particles.append({
                 "x": random.randint(0, config.SCREEN_WIDTH),
@@ -67,6 +72,7 @@ class Transition:
             })
 
     def update(self, dt):
+        """Un frame: primer medio tiempo oscureciendo, segundo claro."""
         if not self.active():
             return
 
@@ -98,6 +104,7 @@ class Transition:
         self.particles = [p for p in self.particles if p["life"] > 0]
 
     def render(self, screen):
+        """Dibuja el velo de color (y sus partículas) sobre la pantalla."""
         if self.alpha <= 0:
             return
 
@@ -113,6 +120,7 @@ class Transition:
                            (int(p["x"]), int(p["y"]), p["size"], p["size"]))
 
     def _get_transition_color(self):
+        """Color del velo: uno por nivel (verde, cian, púrpura...)."""
         color_map = {
             1: config.GREEN,
             2: config.CYAN,

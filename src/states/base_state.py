@@ -19,6 +19,7 @@ class BaseState(ABC):
     """Contrato común para todas las pantallas del juego."""
 
     def __init__(self, game):
+        """Guarda la referencia al objeto Game (pantalla, fuentes, pila)."""
         # `game` es el objeto Game (game.py): nos da acceso a la pantalla,
         # a la fuente, y a los métodos change_state() / push_state().
         self.game = game
@@ -44,7 +45,7 @@ class BaseState(ABC):
         """Se ejecuta una vez cuando el estado deja de ser activo."""
 
     def pause(self):
-        """Se ejecuta si otro estado se apila encima (ej: la pregunta de math)."""
+        """Se ejecuta si otro estado se apila encima de este."""
 
     def resume(self):
         """Se ejecuta cuando se cierra el estado que estaba encima."""

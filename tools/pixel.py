@@ -58,6 +58,7 @@ def lerp_hue(h1: float, h2: float, t: float) -> float:
 
 
 def luminance(color) -> float:
+    """Luminancia normalizada (0..1) según lo que el ojo percibe de RGB."""
     r, g, b = color[:3]
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
 
@@ -89,6 +90,11 @@ class Ramp:
     def __init__(self, base, steps: int = 5, *, shadow_hue: float = 232.0,
                  light_hue: float = 48.0, shift: float = 0.42,
                  sat_boost: float = 0.10, lo: float = 0.17, hi: float = 0.74):
+        """Calcula los `steps` colores de la rampa a partir de `base`.
+
+        Los parámetros con `*` son opcionalísimos: solo los tocan quienes
+        quieran afinar el tono de las sombras/luces.
+        """
         self.colors: list[tuple[int, int, int, int]] = []
         # colorsys trabaja con tono en vueltas [0,1); aquí se usa en grados.
         h, lum, sat = colorsys.rgb_to_hls(*[v / 255.0 for v in base[:3]])
@@ -110,26 +116,32 @@ class Ramp:
             self.colors.append((int(r * 255), int(g * 255), int(b * 255), 255))
 
     def __len__(self) -> int:
+        """Cuántos colores tiene la rampa."""
         return len(self.colors)
 
     def __getitem__(self, index: int):
+        """Color de la posición `index`; si se pasa, se acota al extremo."""
         if index < 0:
             index += len(self.colors)
         return self.colors[max(0, min(len(self.colors) - 1, index))]
 
     @property
     def darkest(self):
+        """El color más oscuro de la rampa (sombra)."""
         return self[0]
 
     @property
     def mid(self):
+        """El tono medio de la rampa (color base aproximado)."""
         return self[len(self) // 2]
 
     @property
     def light(self):
+        """El color más claro de la rampa (luz)."""
         return self[-1]
 
     def hexes(self) -> list[str]:
+        """La rampa en formato hexadecimal (#RRGGBB), para documentación."""
         return ["#%02X%02X%02X" % c[:3] for c in self.colors]
 
 
@@ -140,6 +152,8 @@ class Canvas:
     """Rejilla de píxeles RGBA con primitivas de dibujo."""
 
     def __init__(self, width: int, height: int, fill=TRANSPARENT):
+        """Crea la rejilla `width`×`height` llena de `fill` (por defecto
+        transparente)."""
         self.w = width
         self.h = height
         row = [rgba(fill)] * width
@@ -147,6 +161,7 @@ class Canvas:
 
     # -- acceso ------------------------------------------------------------
     def inside(self, x: int, y: int) -> bool:
+        """True si la coordenada cae dentro del lienzo."""
         return 0 <= x < self.w and 0 <= y < self.h
 
     def put(self, x, y, color):
@@ -166,10 +181,12 @@ class Canvas:
             self.px[y][x] = rgba(color)
 
     def get(self, x, y):
+        """Lee un píxel; fuera del lienzo devuelve transparente."""
         x, y = int(x), int(y)
         return self.px[y][x] if self.inside(x, y) else TRANSPARENT
 
     def is_empty_px(self, x: int, y: int) -> bool:
+        """True si ese píxel está vacío (transparencia)."""
         p = self.get(x, y)
         return p[3] == 0
 
@@ -193,6 +210,7 @@ class Canvas:
             return
         a = sa + da * (1.0 - sa)
         def f(s, d):
+            """Fórmula clásica de composición alfa (source-over)."""
             return int(round((s * sa + d * da * (1.0 - sa)) / a))
         self.px[y][x] = (f(sr, self.px[y][x][0]),
                          f(sg, self.px[y][x][1]),
@@ -222,23 +240,27 @@ class Canvas:
 
     # -- primitivas ---------------------------------------------------------
     def fill_rect(self, x, y, w, h, color):
+        """Rellena un rectángulo de esquina (x, y) con tamaño w×h."""
         for yy in range(int(y), int(y + h)):
             for xx in range(int(x), int(x + w)):
                 self.put(xx, yy, color)
 
     def rect(self, x, y, w, h, color):
+        """Dibuja SOLO el borde de un rectángulo (el interior queda vacío)."""
         self.hline(x, x + w - 1, y, color)
         self.hline(x, x + w - 1, y + h - 1, color)
         self.vline(x, y, y + h - 1, color)
         self.vline(x + w - 1, y, y + h - 1, color)
 
     def hline(self, x0, x1, y, color):
+        """Línea horizontal en la fila `y` de x0 a x1 (en cualquier orden)."""
         if x1 < x0:
             x0, x1 = x1, x0
         for x in range(int(x0), int(x1) + 1):
             self.put(x, y, color)
 
     def vline(self, x, y0, y1, color):
+        """Línea vertical en la columna `x` de y0 a y1 (en cualquier orden)."""
         if y1 < y0:
             y0, y1 = y1, y0
         for y in range(int(y0), int(y1) + 1):
@@ -285,6 +307,7 @@ class Canvas:
                     self.put(x, y, color)
 
     def circle(self, cx, cy, r, color, fill: bool = True):
+        """Círculo centrado en (cx, cy); `fill=False` dibuja el aro."""
         self.ellipse(cx, cy, r, r, color, fill)
 
     def poly(self, points, color):
@@ -308,6 +331,7 @@ class Canvas:
                 self.hline(int(round(xs[i])), int(round(xs[i + 1])), y, color)
 
     def tri(self, p0, p1, p2, color):
+        """Triángulo relleno por sus 3 vértices."""
         self.poly([p0, p1, p2], color)
 
     def blit(self, other: "Canvas", x: int, y: int, skip_transparent: bool = True):
@@ -321,11 +345,13 @@ class Canvas:
 
     # -- transformaciones ----------------------------------------------------
     def copy(self) -> "Canvas":
+        """Copia profunda del lienzo (píxel a píxel)."""
         c = Canvas(self.w, self.h)
         c.px = [list(r) for r in self.px]
         return c
 
     def shift(self, dx: int, dy: int) -> "Canvas":
+        """Copia del lienzo desplazada (dx, dy); lo que se sale, se pierde."""
         out = Canvas(self.w, self.h)
         for y in range(self.h):
             for x in range(self.w):
@@ -334,6 +360,7 @@ class Canvas:
         return out
 
     def flipped_x(self) -> "Canvas":
+        """Copia del lienzo espejada horizontalmente (volteada)."""
         out = Canvas(self.w, self.h)
         for y in range(self.h):
             for x in range(self.w):
@@ -535,6 +562,7 @@ class Canvas:
                 )
 
     def replace(self, old, new):
+        """Cambia TODOS los píxeles de un color por otro (recolorizar)."""
         old = rgba(old)
         new = rgba(new)
         for y in range(self.h):
@@ -571,10 +599,12 @@ class Canvas:
         return (x0, y0, x1, y1)
 
     def opaque_count(self) -> int:
+        """Cuántos píxeles del lienzo NO son transparentes."""
         return sum(1 for y in range(self.h) for x in range(self.w)
                    if self.px[y][x][3] != 0)
 
     def color_histogram(self) -> dict:
+        """{color: cuántos píxeles de ese color hay} — para depurar paletas."""
         hist: dict = {}
         for y in range(self.h):
             for x in range(self.w):
@@ -603,6 +633,7 @@ class Canvas:
         return img
 
     def save(self, path, scale: int = 1, mode: str = "RGBA") -> Path:
+        """Guarda como PNG (creando carpetas si faltan). Devuelve la ruta."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         self.to_image(scale, mode=mode).save(path, "PNG", optimize=True)

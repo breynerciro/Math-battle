@@ -21,6 +21,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 @pytest.fixture(scope="module")
 def pygame_init():
+    """Inicializa (y al final cierra) Pygame una sola vez para el módulo."""
     import pygame
     pygame.init()
     yield pygame
@@ -78,6 +79,7 @@ def test_all_enemies_created_with_sprites(pygame_init):
 
 
 def test_player_animations_exist(pygame_init):
+    """El héroe tiene sus 4 animaciones con al menos un frame cada una."""
     from src.entities.player import Player
     player = Player()
     for anim in ("idle", "attack", "hurt", "victory"):
@@ -86,6 +88,7 @@ def test_player_animations_exist(pygame_init):
 
 
 def test_backgrounds_generated_for_all_levels(pygame_init):
+    """Los 5 fondos se cargan ya escalados al tamaño de la ventana."""
     from src.ui.background import get_background
     from src import config
     for level in range(1, config.TOTAL_LEVELS + 1):

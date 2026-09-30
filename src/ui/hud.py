@@ -22,6 +22,7 @@ class HUD:
     """Dibuja toda la información del combate."""
 
     def __init__(self, game):
+        """Guarda la referencia al Game (para acceder a las fuentes)."""
         self.game = game
 
     # ------------------------------------------------------------------ #

@@ -29,6 +29,7 @@ class Enemy:
     def __init__(self, name: str, hp: int, attack: int,
                  math_topic: MathTopic, difficulty: int,
                  is_boss: bool = False) -> None:
+        """Crea el enemigo con sus estadísticas y carga sus PNG."""
         # -- Identidad ------------------------------------------------------
         self.name: str = name
 
@@ -54,6 +55,7 @@ class Enemy:
 
     # ------------------------------------------------------------------ #
     def play(self, animation: str) -> None:
+        """Cambia de animación y la reinicia desde su primer frame."""
         if animation in self.sprites:
             self.current_animation = animation
             self.sprites[animation].reset()
@@ -66,10 +68,12 @@ class Enemy:
         return damage
 
     def is_dead(self) -> bool:
+        """True cuando se le acabó la vida (HP <= 0)."""
         return self.hp <= 0
 
     # ------------------------------------------------------------------ #
     def update(self, dt: float) -> None:
+        """Un frame: avanza la animación y el efecto de estrella."""
         sprite = self.sprites[self.current_animation]
         sprite.update(dt)
         if sprite.finished and self.current_animation == "hurt":
@@ -77,6 +81,7 @@ class Enemy:
         self.hit_effect.update(dt)
 
     def draw(self, screen: pygame.Surface, x: int, y: int) -> None:
+        """Dibuja al enemigo con su animación actual en (x, y)."""
         self.sprites[self.current_animation].render(screen, x, y)
         # Si la estrella de golpe está activa, dibujarla sobre el enemigo
         if not self.hit_effect.finished:

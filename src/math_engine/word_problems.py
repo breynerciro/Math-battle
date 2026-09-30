@@ -29,6 +29,7 @@ def generate(difficulty: int) -> MathChallenge:
 
 
 def _make(question: str, answer: int, difficulty: int, hint: str) -> MathChallenge:
+    """Empaqueta el problema con su tiempo y sus puntos de nivel 2."""
     return MathChallenge(
         question=question,
         answer=answer,

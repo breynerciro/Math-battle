@@ -42,6 +42,7 @@ class BattleState(BaseState):
     ENEMY_X = 940
 
     def __init__(self, game, level):
+        """Prepara el combate del `level`: enemigos, panel y botones."""
         super().__init__(game)
         self.level = level
         self.sounds = SoundManager()
@@ -77,7 +78,9 @@ class BattleState(BaseState):
 
         # Botones de menú RPG (derecha del panel)
         def menu(i, text, on_click, color, hover):
-            return Button(config.MENU_X, config.MENU_Y + i * 52,
+            """Crea un botón de la columna derecha: i es su posición (0-3)."""
+            return Button(config.MENU_X,
+                          config.MENU_Y + i * config.MENU_BTN_STEP,
                           config.MENU_W, config.MENU_BTN_H, text,
                           on_click=on_click, color=color, hover_color=hover,
                           font_size=config.FONT_SIZE_MEDIUM)
@@ -144,6 +147,7 @@ class BattleState(BaseState):
     #  Entrada / salida del estado
     # ------------------------------------------------------------------ #
     def enter(self):
+        """Al entrar: música del combate y presentación del primer enemigo."""
         self.sounds.play_music("boss" if self.current_enemy.is_boss else "battle")
         if not self.intro_shown:
             self.message = f"¡{self.current_enemy.name} aparece!"
@@ -197,12 +201,14 @@ class BattleState(BaseState):
     def _not_ready(self, text):
         """MAGIA/OBJETOS: funcionalidad fuera del alcance del prototipo."""
         def handler():
+            """Muestra el mensaje de "próximamente" en la pantalla."""
             self.sounds.play("wrong")
             self.message = text
             self.message_timer = 1.5
         return handler
 
     def _flee(self):
+        """HUIR: abandona la batalla y vuelve al mapa de niveles."""
         if self.transition.active() or self.pending_result is not None:
             return
         self.sounds.play("click")
@@ -236,6 +242,7 @@ class BattleState(BaseState):
                 self._feet_y(player) - 110, config.GREEN, config.FONT_SIZE_SMALL))
             direction = (self.ENEMY_X - self.HERO_X, 0)
             self.shake.trigger(0.25, 6, direction=direction)
+            # Pausa para ver el golpe (más larga si el enemigo muere)
             if result["enemy_died"]:
                 self.wait_timer = 1.2
             else:
@@ -254,6 +261,7 @@ class BattleState(BaseState):
             self.floating.append(FloatingText(
                 f"-{result['damage']}", self.HERO_X,
                 self._feet_y(player) - 100, config.RED, config.FONT_SIZE_LARGE))
+            # Pausa para ver el contraataque (más larga si cae el héroe)
             if result["player_died"]:
                 self.death_pending = True
                 self.wait_timer = 1.2
@@ -301,6 +309,7 @@ class BattleState(BaseState):
     #  Ciclo del estado
     # ------------------------------------------------------------------ #
     def handle_events(self, events):
+        """Ratón y teclado: opciones 1-4, botones del menú, Enter y Esc."""
         for event in events:
             # Opciones (solo cuando hay pregunta en pantalla)
             if self.question_active:
@@ -327,6 +336,7 @@ class BattleState(BaseState):
                         self._flee()
 
     def update(self, dt):
+        """Un frame: timers del turno, animaciones, partículas y esperas."""
         player = self.game.player
         enemy = self.current_enemy
 
@@ -390,6 +400,7 @@ class BattleState(BaseState):
     #  Render
     # ------------------------------------------------------------------ #
     def render(self, screen):
+        """Dibuja la pantalla completa: escenario, personajes y panel."""
         # Screen shake: desplaza todo el mundo un poco
         offset_x, offset_y = self.shake.get_offset()
 
@@ -434,6 +445,8 @@ class BattleState(BaseState):
     #  Panel de acción (sección inferior)
     # ------------------------------------------------------------------ #
     def _render_action_panel(self, screen):
+        """Dibuja la sección INFERIOR: pregunta, opciones A-D, menú y
+        el panel de feedback de la esquina inferior derecha."""
         font_med = self.game.get_font(config.FONT_SIZE_MEDIUM)
         font_small = self.game.get_font(config.FONT_SIZE_SMALL)
 
@@ -447,6 +460,7 @@ class BattleState(BaseState):
 
         # --- Zona izquierda: la pregunta ------------------------------------
         if self.question_active:
+            # Máximo 3 líneas de 24 px; debajo, la barra de tiempo y las opciones
             y = 456
             for line in self._wrap(self.challenge.question,
                                    config.FONT_SIZE_MEDIUM,
@@ -454,7 +468,7 @@ class BattleState(BaseState):
                 screen.blit(font_med.render(line, True, config.WHITE),
                             (config.QUESTION_X, y))
                 y += 24
-            # Barra de tiempo del reto
+            # Barra de tiempo del reto (verde → naranja → rojo)
             ratio = 1.0 - (self.combat.challenge_time /
                            max(1.0, self.challenge.time_limit))
             bar = pygame.Rect(config.QUESTION_X, 524, config.QUESTION_W, 8)
@@ -469,8 +483,14 @@ class BattleState(BaseState):
                 prompt = "Pulsa ATACAR para plantear la pregunta del turno"
             else:
                 prompt = "¡Resolviendo el turno...!"
-            screen.blit(font_med.render(prompt, True, config.LIGHT_GRAY),
-                        (config.QUESTION_X, 464))
+            # Se parte en líneas para que nunca se meta debajo de los
+            # botones de la derecha (x = MENU_X)
+            y = 464
+            for line in self._wrap(prompt, config.FONT_SIZE_MEDIUM,
+                                   config.QUESTION_W)[:2]:
+                screen.blit(font_med.render(line, True, config.LIGHT_GRAY),
+                            (config.QUESTION_X, y))
+                y += 24
 
         # --- Las 4 opciones (A, B, C, D) ------------------------------------
         for i, button in enumerate(self.option_buttons):

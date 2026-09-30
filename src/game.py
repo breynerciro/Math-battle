@@ -26,6 +26,7 @@ class Game:
     """Encapsula el loop principal y la pila de estados."""
 
     def __init__(self):
+        """Arranca Pygame: ventana, fuentes, datos y menú inicial."""
         pygame.init()
         self.screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         pygame.display.set_caption(config.TITLE)
@@ -87,6 +88,7 @@ class Game:
             self.states[-1].resume()
 
     def current_state(self):
+        """La pantalla que se está viendo (la de arriba de la pila)."""
         return self.states[-1] if self.states else None
 
     # ------------------------------------------------------------------ #
@@ -97,12 +99,14 @@ class Game:
         return self._fonts.get(size, self._fonts[config.FONT_SIZE_MEDIUM])
 
     def quit(self):
+        """Pide cerrar el juego: el bucle principal parará en el próximo frame."""
         self.running = False
 
     # ------------------------------------------------------------------ #
     #  BUCLE PRINCIPAL
     # ------------------------------------------------------------------ #
     def run(self):
+        """BUCLE PRINCIPAL: eventos → update → render, 60 veces por segundo."""
         while self.running:
             # dt = tiempo (en segundos) entre este frame y el anterior.
             # Sirve para que las animaciones vayan a la misma velocidad

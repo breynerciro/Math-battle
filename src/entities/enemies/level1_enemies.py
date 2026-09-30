@@ -16,15 +16,19 @@ from ..enemy import Enemy
 
 
 class Goblin(Enemy):
-    """Explorador del bosque: insiste hasta que fallas una resta."""
+    """Explorador del bosque: 30 HP, el rival más débil del juego."""
 
     def __init__(self) -> None:
+        """Goblin: 30 HP, retos de sumas con dificultad 1."""
         super().__init__("Goblin", hp=30, attack=10,
                          math_topic=MathTopic.SUMAS, difficulty=1)
 
 
 class Skeleton(Enemy):
+    """Segundo rival del bosque: 35 HP y restas algo más grandes."""
+
     def __init__(self) -> None:
+        """Esqueleto: 35 HP, retos de sumas con dificultad 2."""
         super().__init__("Esqueleto", hp=35, attack=12,
                          math_topic=MathTopic.SUMAS, difficulty=2)
 
@@ -35,6 +39,7 @@ class SlimeMatematico(Enemy):
     SPRITE_NAME = "slime"
 
     def __init__(self) -> None:
+        """Slime Matemático: 40 HP, el jefe que manda el diseño del nivel 1."""
         super().__init__("Slime Matemático", hp=40, attack=16,
                          math_topic=MathTopic.SUMAS, difficulty=2,
                          is_boss=True)

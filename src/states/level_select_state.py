@@ -36,6 +36,7 @@ class LevelCard:
     """Tarjeta de nivel con animaciones y efectos de hover."""
 
     def __init__(self, level, rect, unlocked):
+        """Crea la tarjeta en reposo (sin hover ni rebote)."""
         self.level = level
         self.rect = rect
         self.unlocked = unlocked
@@ -47,12 +48,15 @@ class LevelCard:
         self.glow_speed = 2.0 + level * 0.3
 
     def set_hovered(self, hovered):
+        """Si el ratón está encima, la tarjeta se agranda un 8%."""
         self.target_scale = 1.08 if hovered else 1.0
 
     def trigger_bounce(self):
+        """Reinicio el rebote: se dispara al hacer clic en la tarjeta."""
         self.bounce_time = 0.0
 
     def update(self, dt):
+        """Un frame: acerca la escala al objetivo y anima el rebote."""
         self.hover_scale += (self.target_scale - self.hover_scale) * 8 * dt
         self.glow_pulse += self.glow_speed * dt
 
@@ -64,6 +68,7 @@ class LevelCard:
             self.bounce_offset = 0.0
 
     def get_render_rect(self):
+        """Rectángulo real a dibujar (con la escala y el rebote aplicados)."""
         scale = self.hover_scale
         w = int(self.rect.width * scale)
         h = int(self.rect.height * scale)
@@ -79,12 +84,14 @@ class LevelSelectState(BaseState):
     GAP = 24
 
     def __init__(self, game):
+        """Crea las 5 tarjetas de nivel (una fila de 3 y otra de 2)."""
         super().__init__(game)
         self.sounds = SoundManager()
         self.cards = []
         self.time = 0.0
 
     def enter(self):
+        """Al entrar: música de menú y lectura del nivel desbloqueado."""
         self.sounds.play_music("menu")
         self.save_data = self.game.save_system.load()
         self.highest = self.save_data.get("highest_level", 1)
@@ -108,11 +115,13 @@ class LevelSelectState(BaseState):
                                   font_size=config.FONT_SIZE_MEDIUM)
 
     def _go_menu(self):
+        """VOLVER → regresa al menú principal."""
         self.sounds.play("click")
         from .menu_state import MenuState
         self.game.change_state(MenuState(self.game))
 
     def _start_level(self, level):
+        """Clic en una tarjeta: rebota y arranca la batalla de ese nivel."""
         self.sounds.play("click")
         for card in self.cards:
             if card.level == level:
@@ -122,6 +131,7 @@ class LevelSelectState(BaseState):
         self.game.change_state(BattleState(self.game, level))
 
     def handle_events(self, events):
+        """Clics en tarjetas/botón VOLVER y tecla Esc para volver atrás."""
         for event in events:
             self.back_button.handle_event(event)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -135,6 +145,7 @@ class LevelSelectState(BaseState):
                 self._go_menu()
 
     def update(self, dt):
+        """Un frame: anima tarjetas (hover/rebote) y el fondo estrellado."""
         self.time += dt
         self.back_button.update(dt)
 
@@ -145,6 +156,7 @@ class LevelSelectState(BaseState):
             card.update(dt)
 
     def render(self, screen):
+        """Dibuja fondo, título, récord y las 5 tarjetas."""
         self._render_background(screen)
 
         self.draw_text(screen, "SELECCIONA NIVEL", config.FONT_SIZE_LARGE,
@@ -162,6 +174,7 @@ class LevelSelectState(BaseState):
             self.back_button.font_size))
 
     def _render_background(self, screen):
+        """Fondo azul nocturno con estrellas que parpadean."""
         screen.fill(config.DARK_BLUE)
 
         for i in range(30):
@@ -173,6 +186,7 @@ class LevelSelectState(BaseState):
             pygame.draw.circle(screen, star_color, (x, y), size)
 
     def _render_card(self, screen, card):
+        """Dibuja UNA tarjeta: glow, borde, número, nombre y estrellas."""
         render_rect = card.get_render_rect()
         unlocked = card.unlocked
         level = card.level

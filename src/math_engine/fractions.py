@@ -39,6 +39,7 @@ def _rand_fraction(max_den=6):
 
 
 def _make(question, answer: Fraction, difficulty, hint):
+    """Empaqueta el reto de fracciones con su texto bonito (a/b)."""
     # Si el resultado es entero (6/1) se muestra como "6": una fracción
     # sobre 1 no es la respuesta bonita que queremos enseñar.
     display = (str(answer.numerator) if answer.denominator == 1

@@ -29,6 +29,7 @@ class SoundManager:
     _generated = False       # ¿ya generamos los .wav en esta sesión?
 
     def __init__(self):
+        """Arranca el mezclador de audio y prepara los efectos."""
         if not pygame.mixer.get_init():
             try:
                 pygame.mixer.init(frequency=SAMPLE_RATE, size=-16, channels=2, buffer=512)
@@ -144,6 +145,7 @@ class SoundManager:
             pass
 
     def stop_music(self):
+        """Detiene la música de fondo (si el audio está disponible)."""
         try:
             pygame.mixer.music.stop()
             self.current_music = None

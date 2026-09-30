@@ -69,15 +69,19 @@ class SaveSystem:
     """
 
     def load(self) -> dict:
+        """Lee el progreso del archivo JSON."""
         return load()
 
     def save(self, data: dict) -> None:
+        """Escribe el progreso en el archivo JSON."""
         save(data)
 
     def reset(self) -> dict:
+        """Borra el progreso y vuelve a los valores por defecto."""
         return reset()
 
     def record_result(self, data: dict, **kwargs) -> dict:
+        """Actualiza récords con el resultado de una partida y guarda."""
         return record_result(data, **kwargs)
 
 

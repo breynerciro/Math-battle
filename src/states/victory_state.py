@@ -20,6 +20,7 @@ class VictoryState(BaseState):
 
     def __init__(self, game, level, player, last_level=False,
                  bosses_defeated=0):
+        """Guarda el resumen, desbloquea el siguiente nivel y crea botones."""
         super().__init__(game)
         self.level = level
         self.player = player
@@ -69,12 +70,14 @@ class VictoryState(BaseState):
         self.game.change_state(BattleState(self.game, self.level + 1))
 
     def _go_menu(self):
+        """MENÚ → vuelve al menú principal."""
         self.sounds.play("click")
         from .menu_state import MenuState
         self.game.change_state(MenuState(self.game))
 
     # ------------------------------------------------------------------ #
     def handle_events(self, events):
+        """Clics en los botones; Enter equivale al botón principal."""
         for event in events:
             for button in self.buttons:
                 button.handle_event(event)
@@ -83,11 +86,13 @@ class VictoryState(BaseState):
                 self.buttons[0].on_click()
 
     def update(self, dt):
+        """Un frame: actualiza el efecto hover de los botones."""
         for button in self.buttons:
             button.update(dt)
 
     # ------------------------------------------------------------------ #
     def render(self, screen):
+        """Dibuja título, subtítulo, héroe celebrando, stats y botones."""
         screen.fill(config.DARK_GREEN if not self.last_level else config.DARK_BLUE)
 
         # Título con "glow" simple (doble texto)

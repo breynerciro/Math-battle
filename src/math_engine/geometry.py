@@ -34,6 +34,7 @@ def generate(difficulty: int) -> MathChallenge:
 
 
 def _make(question, answer, difficulty, hint, answer_display=""):
+    """Empaqueta el reto de geometría con su unidad (cm, cm², °)."""
     return MathChallenge(
         question=question,
         answer=answer,

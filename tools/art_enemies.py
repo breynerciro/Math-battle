@@ -1,6 +1,6 @@
-"""Los enemigos de Math Battle, dibujados píxel a píxel.
+"""Los enemigos de El Héroe de las Matemáticas, dibujados píxel a píxel.
 
-Todos ocupan un lienzo de 32x32 y se guardan escalados x4 (128x128), con
+Todos ocupan un lienzo de 32x32 y se guardan escalados x5 (160x160), con
 la misma convención que el héroe: la luz cae de ARRIBA a la izquierda, la
 sombra baja a la derecha y el contorno se pasa al final.
 
@@ -108,6 +108,7 @@ def hurt_frame(canvas: Canvas) -> Canvas:
 #     SLIME: G sombra, t cuerpo, g luz, e borde, h veta, v núcleo, w blanco
 # ---------------------------------------------------------------------------
 def slime(phase: int = 0) -> Canvas:
+    """Dibuja al Slime en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.SLIME
     squish = 1.0 if phase == 0 else 0.88
@@ -146,6 +147,7 @@ def slime(phase: int = 0) -> Canvas:
 #             f cuero, z cuero-luz, y ojos, w blanco
 # ---------------------------------------------------------------------------
 def goblin(phase: int = 0) -> Canvas:
+    """Dibuja al Goblin en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.GOBLIN
     dy = 1 if phase else 0
@@ -200,6 +202,7 @@ def goblin(phase: int = 0) -> Canvas:
 #               e brasa, o brasa-brillo, B marrón, b marrón-luz
 # ---------------------------------------------------------------------------
 def skeleton(phase: int = 0) -> Canvas:
+    """Dibuja al Esqueleto en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.SKELETON
     dy = 1 if phase else 0
@@ -253,6 +256,7 @@ def skeleton(phase: int = 0) -> Canvas:
 #            n piel, k piel-luz, v varita, b oro, s verde, w blanco
 # ---------------------------------------------------------------------------
 def witch(phase: int = 0) -> Canvas:
+    """Dibuja a la Bruja en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.WITCH
     dy = 1 if phase else 0
@@ -295,6 +299,7 @@ def witch(phase: int = 0) -> Canvas:
 #                  e magma, E magma-brillo, m musgo, i musgo-luz, R junta
 # ---------------------------------------------------------------------------
 def stone_golem(phase: int = 0) -> Canvas:
+    """Dibuja al Golem de Piedra en su idle (phase 0 y 1). Lienzo 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.STONE_GOLEM
     dy = 1 if phase else 0
@@ -346,6 +351,7 @@ def stone_golem(phase: int = 0) -> Canvas:
 #            blanco-hueso, c arcano, a blanco
 # ---------------------------------------------------------------------------
 def ghost(phase: int = 0) -> Canvas:
+    """Dibuja al Fantasma en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.GHOST
     dy = 2 if phase else 0
@@ -380,6 +386,7 @@ def ghost(phase: int = 0) -> Canvas:
 #                   punta, R cuerpo-sombra, r cuerpo, w ala, q garra
 # ---------------------------------------------------------------------------
 def lesser_demon(phase: int = 0) -> Canvas:
+    """Dibuja al Demonio Menor en su idle (phase 0 y 1). Lienzo 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.LESSER_DEMON
     dy = 1 if phase else 0
@@ -436,6 +443,7 @@ def lesser_demon(phase: int = 0) -> Canvas:
 #              z pico, u ala-borde, K contorno, m/q piel
 # ---------------------------------------------------------------------------
 def phoenix(phase: int = 0) -> Canvas:
+    """Dibuja al Fénix en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.PHOENIX
     dy = 1 if phase else 0
@@ -477,6 +485,7 @@ def phoenix(phase: int = 0) -> Canvas:
 #                  r tela-sombra, q tela, E visera, G adorno, R plume
 # ---------------------------------------------------------------------------
 def dark_knight(phase: int = 0) -> Canvas:
+    """Dibuja al Caballero Oscuro en su idle (phase 0 y 1). Lienzo 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.DARK_KNIGHT
     dy = 1 if phase else 0
@@ -533,6 +542,7 @@ def dark_knight(phase: int = 0) -> Canvas:
 #            u túnica-luz, v orbe, b cayado, o túnica-borde
 # ---------------------------------------------------------------------------
 def mage(phase: int = 0) -> Canvas:
+    """Dibuja al Mago en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.MAGE
     dy = 1 if phase else 0
@@ -576,6 +586,7 @@ def mage(phase: int = 0) -> Canvas:
 #             F brasa, K contorno
 # ---------------------------------------------------------------------------
 def hydra(phase: int = 0) -> Canvas:
+    """Dibuja a la Hidra en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.HYDRA
     sway = 1 if phase else -1
@@ -622,6 +633,7 @@ def hydra(phase: int = 0) -> Canvas:
 #              w blanco
 # ---------------------------------------------------------------------------
 def shadow(phase: int = 0) -> Canvas:
+    """Dibuja a la Sombra en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.SHADOW
     dy = 1 if phase else 0
@@ -670,6 +682,7 @@ def shadow(phase: int = 0) -> Canvas:
 #                V brillo, b piel, m piel, n piel-luz, g oro, E oro-luz
 # ---------------------------------------------------------------------------
 def archmage(phase: int = 0) -> Canvas:
+    """Dibuja al Archimago en su idle (phase 0 y 1). Lienzo lógico 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.ARCHMAGE
     dy = 1 if phase else 0
@@ -724,6 +737,7 @@ def archmage(phase: int = 0) -> Canvas:
 #                    Y ojo, E fuego, r ala
 # ---------------------------------------------------------------------------
 def basic_dragon(phase: int = 0) -> Canvas:
+    """Dibuja al Dragón Básico en su idle (phase 0 y 1). Lienzo 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.BASIC_DRAGON
     dy = 1 if phase else 0
@@ -789,6 +803,7 @@ def basic_dragon(phase: int = 0) -> Canvas:
 #                      F blanco-caliente, Y oro, E fuego
 # ---------------------------------------------------------------------------
 def supreme_dragon(phase: int = 0) -> Canvas:
+    """Dibuja al Dragón Supremo en su idle (phase 0 y 1). Lienzo 32x32."""
     c = Canvas(SIZE, SIZE)
     p = P.SUPREME_DRAGON
     dy = 1 if phase else 0
@@ -857,6 +872,7 @@ def supreme_dragon(phase: int = 0) -> Canvas:
 #      GENÉRICO: reutiliza SHADOW con un aro claro en la cabeza.
 # ---------------------------------------------------------------------------
 def generic(phase: int = 0) -> Canvas:
+    """Dibuja el enemigo genérico (respaldo si falta un sprite). Lienzo 32x32."""
     c = shadow(phase)
     p = P.SHADOW
     # Un aro claro alrededor de la cabeza: la marca del "desconocido".

@@ -74,10 +74,12 @@ HERO_CLIPS = ("idle", "attack", "hurt", "victory")
 #  Escritura
 # ---------------------------------------------------------------------------
 def _save(canvas: Canvas, path: Path, scale: int, mode: str = "RGBA") -> Path:
+    """Guarda un lienzo escalado (y asegura que la carpeta exista)."""
     return canvas.save(path, scale=scale, mode=mode)
 
 
 def write_hero() -> list[Path]:
+    """Escribe los frames del héroe: assets/sprites/hero/<anim>/frameN.png"""
     frames = art_hero.build()
     written = []
     for clip in HERO_CLIPS:
@@ -88,6 +90,7 @@ def write_hero() -> list[Path]:
 
 
 def write_enemies() -> list[Path]:
+    """Escribe idle (2 frames) y hurt (1 frame) de cada enemigo."""
     written = []
     for slug, draw in ENEMIES.items():
         idle = [draw(0), draw(1)]
@@ -105,6 +108,7 @@ def write_enemies() -> list[Path]:
 
 
 def write_effects() -> list[Path]:
+    """Escribe los efectos (la estrella que sale al golpear)."""
     written = []
     for name, frames in art_effects.build().items():
         for i, canvas in enumerate(frames):
@@ -115,6 +119,7 @@ def write_effects() -> list[Path]:
 
 
 def write_backgrounds() -> list[Path]:
+    """Escribe los 5 fondos en RGB (ocupan toda la pantalla, sin alfa)."""
     written = []
     for i, draw in enumerate(art_backgrounds.LEVELS, start=1):
         # Los fondos van en RGB: ocupan toda la pantalla y no usan alfa.
@@ -184,6 +189,7 @@ def verify() -> list[str]:
 
 
 def generate(quiet: bool = False) -> list[Path]:
+    """Regenera TODOS los PNG del juego y devuelve la lista de archivos."""
     written = []
     written += write_hero()
     written += write_enemies()
@@ -198,6 +204,7 @@ def generate(quiet: bool = False) -> list[Path]:
 
 
 def main(argv=None) -> int:
+    """CLI: genera todo (o solo verifica con --verify). Devuelve 0 si OK."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if "--verify" in argv:
         problems = verify()

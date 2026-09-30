@@ -53,6 +53,7 @@ def _clip_paths():
 
 
 def _all_sprites():
+    """Genera (ruta, lienzo, modo, escala) de TODOS los PNG del juego."""
     for clip, frames in art_hero.build().items():
         for i, c in enumerate(frames):
             yield (f"hero/{clip}/frame{i}.png", c, "RGBA",
@@ -93,6 +94,7 @@ def test_dentro_del_lienzo():
     original = Canvas.put
 
     def put(self, x, y, color):
+        """Parche de Canvas.put: apunta (x, y) fuera de rango en `fuera`."""
         if not (0 <= int(x) < self.w and 0 <= int(y) < self.h):
             fuera.append((int(x), int(y)))
         return original(self, x, y, color)
@@ -126,6 +128,7 @@ def test_contraste_del_cuerpo_contra_el_fondo():
     enemigo no se distingue.
     """
     def lum(c):
+        """Luminancia percibida de un color (fórmula de Rec. 709)."""
         r, g, b = c[:3]
         return 0.2126 * r + 0.7152 * g + 0.0722 * b
 

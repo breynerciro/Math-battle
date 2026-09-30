@@ -19,10 +19,12 @@ from .. import config
 
 
 def ease_out_cubic(t):
+    """Curva "sale rápido y frena suave" (para textos que suben)."""
     return 1 - pow(1 - t, 3)
 
 
 def ease_out_elastic(t):
+    """Curva elástica: el texto entra rebotando como una goma."""
     if t == 0 or t == 1:
         return t
     return pow(2, -10 * t) * math.sin((t - 0.1) * 5 * math.pi) + 1
@@ -32,6 +34,7 @@ class FloatingText:
     """Texto que flota con easing y animación de escala."""
 
     def __init__(self, text, x, y, color=config.WHITE, size=None):
+        """Crea el texto flotante en la posición (x, y)."""
         self.text = text
         self.x = x
         self.y = y
@@ -44,6 +47,10 @@ class FloatingText:
         self.target_scale = 1.0
 
     def update(self, dt):
+        """Un frame: sube, crece con rebote y se va apagando.
+
+        Devuelve False cuando ya murió (para quitarlo de la lista).
+        """
         self.life -= dt * 0.9
         if self.life <= 0:
             return False
@@ -59,6 +66,7 @@ class FloatingText:
         return True
 
     def render(self, screen, font_getter):
+        """Dibuja el texto con su escala actual y transparencia."""
         font = font_getter(self.font_size)
         surface = font.render(self.text, True, self.color)
 
@@ -76,6 +84,7 @@ class ScreenShake:
     """Screen shake direccional con decay exponencial."""
 
     def __init__(self):
+        """Shake apagado: sin duración ni intensidad."""
         self.time_left = 0.0
         self.duration = 0.0
         self.intensity = 0
@@ -83,6 +92,10 @@ class ScreenShake:
         self.direction_y = 0
 
     def trigger(self, duration=0.3, intensity=6, direction=None):
+        """Activa el temblor: cuánto dura, cuánto tiembla y hacia dónde.
+
+        `direction` es un par (dx, dy); si no se da, elige una al azar.
+        """
         self.duration = duration
         self.time_left = duration
         self.intensity = intensity
@@ -99,10 +112,13 @@ class ScreenShake:
             self.direction_y = math.sin(angle)
 
     def update(self, dt):
+        """Un frame: va gastando el tiempo que queda de temblor."""
         if self.time_left > 0:
             self.time_left -= dt
 
     def get_offset(self):
+        """Desplazamiento de ESTE frame: grande al principio y decayendo
+        (cuadrático) hasta quedar en cero."""
         if self.time_left <= 0:
             return 0, 0
 
@@ -121,18 +137,22 @@ class HitStop:
     """Pausa de acción en impactos importantes."""
 
     def __init__(self):
+        """Hit-stop apagado (sin pausa)."""
         self.time_left = 0.0
 
     def trigger(self, duration=0.05):
+        """Pausa la acción unos segundos: da más peso al golpe."""
         self.time_left = duration
 
     def update(self, dt):
+        """Un frame: descuenta la pausa. Devuelve True mientras dure."""
         if self.time_left > 0:
             self.time_left -= dt
             return True
         return False
 
     def active(self):
+        """True mientras el juego está pausado por el impacto."""
         return self.time_left > 0
 
 
@@ -140,21 +160,25 @@ class FlashEffect:
     """Flash de pantalla para eventos importantes."""
 
     def __init__(self):
+        """Flash apagado."""
         self.alpha = 0
         self.color = config.WHITE
         self.decay_speed = 400
 
     def trigger(self, color=config.WHITE, intensity=150):
+        """Lanza el destello: color y opacidad inicial (intensity 0-255)."""
         self.alpha = intensity
         self.color = color
 
     def update(self, dt):
+        """Un frame: el destello se apaga poco a poco."""
         if self.alpha > 0:
             self.alpha -= self.decay_speed * dt
             if self.alpha < 0:
                 self.alpha = 0
 
     def render(self, screen):
+        """Pinta una capa de color transparente sobre TODO (si aún se ve)."""
         if self.alpha > 0:
             flash = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
             flash.fill((*self.color, int(self.alpha)))
@@ -165,9 +189,12 @@ class ParticleSystem:
     """Sistema de partículas mejorado con variedad visual."""
 
     def __init__(self):
+        """Lista vacía de partículas."""
         self.particles = []
 
     def burst(self, x, y, color=config.YELLOW, count=14, speed=120, particle_type="spark"):
+        """Explosión de `count` chispas saliendo en todas las direcciones
+        desde el punto (x, y) con velocidades aleatorias."""
         for _ in range(count):
             angle = random.uniform(0, 2 * math.pi)
             v = random.uniform(speed * 0.4, speed)
@@ -186,6 +213,7 @@ class ParticleSystem:
             })
 
     def trail(self, x, y, color=config.YELLOW, count=3):
+        """Estela suave: poquitas partículas lentas alrededor de (x, y)."""
         for _ in range(count):
             self.particles.append({
                 "x": x + random.uniform(-5, 5),
@@ -202,6 +230,8 @@ class ParticleSystem:
             })
 
     def update(self, dt):
+        """Un frame: mueve cada partícula, les aplica gravedad (160 px/s²)
+        y descarta las que se quedaron sin vida."""
         alive = []
         for p in self.particles:
             p["x"] += p["vx"] * dt
@@ -219,6 +249,7 @@ class ParticleSystem:
         self.particles = alive
 
     def render(self, screen):
+        """Dibuja cada partícula; cuanto más vieja, más pequeña se ve."""
         for p in self.particles:
             life_ratio = p["life"] / p["max_life"]
             size = max(1, int(p["size"] * life_ratio * 2))

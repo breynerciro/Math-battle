@@ -30,6 +30,7 @@ class CombatSystem:
     PH_DEFEAT = "defeat"                 # el héroe cayó
 
     def __init__(self, player, generator):
+        """Guarda al jugador y al generador de retos compartidos."""
         self.player = player
         self.generator = generator       # ChallengeGenerator
         self.challenge = None
@@ -83,6 +84,7 @@ class CombatSystem:
         return self._finish(correct, timed_out)
 
     def _finish(self, correct, timed_out):
+        """Empaqueta el resultado del turno (común a acierto y error)."""
         result = {
             "correct": correct,
             "timeout": timed_out,
@@ -148,6 +150,7 @@ class CombatSystem:
     #  Actualización por frame (para el timer del reto)
     # ------------------------------------------------------------------ #
     def update(self, dt):
+        """Avanza el cronómetro del reto (solo mientras está en pantalla)."""
         if self.phase == self.PH_CHALLENGE:
             self.challenge_time += dt
 

@@ -22,6 +22,7 @@ class MenuState(BaseState):
     """Pantalla de inicio del juego."""
 
     def __init__(self, game):
+        """Crea los 3 botones del menú y los símbolos matemáticos de fondo."""
         super().__init__(game)
         self.sounds = SoundManager()
 
@@ -49,26 +50,31 @@ class MenuState(BaseState):
 
     # ------------------------------------------------------------------ #
     def enter(self):
+        """Al entrar: música de menú y recarga del récord guardado."""
         self.sounds.play_music("menu")
         # Cargamos (o recargamos) el récord cada vez que volvemos al menú
         self.save_data = self.game.save_system.load()
 
     # ------------------------------------------------------------------ #
     def _start_game(self):
+        """JUGAR → pasa al mapa de selección de niveles."""
         self.sounds.play("click")
         self.game.change_state(LevelSelectState(self.game))
 
     def _go_credits(self):
+        """CRÉDITOS → muestra la pantalla de créditos."""
         self.sounds.play("click")
         self.game.change_state(CreditsState(self.game))
 
     # ------------------------------------------------------------------ #
     def handle_events(self, events):
+        """Pasa cada evento a los 3 botones (ellos solos detectan el clic)."""
         for event in events:
             for button in self.buttons:
                 button.handle_event(event)
 
     def update(self, dt):
+        """Un frame: actualiza botones y hace flotar los símbolos."""
         for button in self.buttons:
             button.update(dt)
         # Los símbolos flotan hacia arriba y reaparecen por abajo
@@ -79,6 +85,7 @@ class MenuState(BaseState):
                 s["x"] = random.uniform(0, config.SCREEN_WIDTH)
 
     def render(self, screen):
+        """Dibuja el título, el héroe, los símbolos y los botones."""
         # Fondo degradado simple con franjas retro
         screen.fill(config.DARK_BLUE)
         pygame.draw.rect(screen, config.DARK_GRAY,

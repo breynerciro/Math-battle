@@ -28,6 +28,7 @@ def generate(difficulty: int) -> MathChallenge:
 
 
 def _make(question, answer, difficulty, hint, answer_display=""):
+    """Empaqueta el reto de potencias con su tiempo y puntos."""
     return MathChallenge(
         question=question,
         answer=answer,

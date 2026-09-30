@@ -36,6 +36,7 @@ from tools import generate_art  # noqa: E402  (necesita ROOT en sys.path)
 
 
 def main() -> int:
+    """Delega en tools.generate_art (el comando histórico del proyecto)."""
     return generate_art.main()
 
 

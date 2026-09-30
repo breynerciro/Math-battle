@@ -9,10 +9,10 @@ cielo y atmósfera.
 
 Los escenarios siguen la temática del diseño de los 5 niveles:
 
-1. **El Bosque de las Sumas** — claro nocturno con árboles y césped.
-2. **La Mina de la Multiplicación** — roca, vetas de gemas y engranajes.
-3. **El Templo de las Fracciones** — ruinas azules con columnas rotas.
-4. **El Puente Hacia el Caos** — puente oscuro bajo un cielo estrellado.
+1. **El Bosque de las Sumas** — bosque verde y vibrante a plena luz.
+2. **La Mina de la Multiplicación** — vigas, gemas, engranajes y piedra.
+3. **El Templo de las Fracciones** — piedra azul mística y runas cian.
+4. **El Puente Hacia el Caos** — puente en el espacio, cielo púrpura.
 5. **El Castillo del Caos** — interior con portales y símbolos neón.
 
 Dos reglas que se respetan en los cinco niveles:
@@ -117,37 +117,6 @@ def _moon(c: Canvas, x: int, y: int, r: int, color, halo) -> None:
     c.circle(x, y, r, color)
     c.circle(x + 1, y - 1, r - 2, mix(color, (255, 255, 255), 0.35))
     c.circle(x - r // 2, y + r // 3, max(1, r // 4), mix(color, (0, 0, 0), 0.12))
-
-
-def _battlement(c: Canvas, x, y, w, h, color, notch=4) -> None:
-    """Muralla almenada: la silueta que dice "castillo" sin dibujarlo."""
-    c.fill_rect(x, y, w, h, color)
-    step = max(4, notch * 2)
-    for mx in range(x, x + w, step):
-        c.fill_rect(mx, y - notch, notch, notch, color)
-
-
-def _tower(c: Canvas, x: int, base: int, w: int, h: int, body, edge,
-           roof=None, windows=(), notch=4) -> None:
-    """Torre del castillo: cuerpo almenado, arista iluminada y ventanas
-    encendidas. `windows` = tuplas (x_rel, y_rel) en coordenadas de la torre."""
-    top = base - h
-    c.fill_rect(x, top, w, h, body)
-    c.vline(x, top, base - 1, edge)                     # arista de luz
-    c.vline(x + w - 1, top, base - 1, mix(body, (0, 0, 0), 0.25))
-    if roof is not None:
-        # Tejado a dos aguas: más legible que una cresta almenada.
-        for i in range(w // 2 + 1):
-            half = (w // 2) - i
-            if half <= 0:
-                break
-            c.fill_rect(x + i, top - (w // 2) + i, 1, 1, roof)
-            c.fill_rect(x + w - 1 - i, top - (w // 2) + i, 1, 1, roof)
-        c.fill_rect(x - 1, top - w // 2, w + 2, 2, roof)
-    else:
-        _battlement(c, x, top, w, h, body, notch)
-    for wx, wy in windows:
-        c.fill_rect(x + wx, top + wy, 2, 3, P.GOLD)
 
 
 def _portal(c: Canvas, x: int, base: int, w: int, h: int, inner, rim,
@@ -289,24 +258,19 @@ def _vignette(c: Canvas, color=(0, 0, 0), strength=0.34, bands: int = 4) -> None
 #  Helpers de escenario (bosque, mina, templo, puente, interior)
 # ---------------------------------------------------------------------------
 def _tree(c: Canvas, x: int, base: int, h: int, body, light) -> None:
-    """Árbol de copa redonda: tres elipses apiladas y tronco corto."""
-    trunk_h = max(6, h // 5)
+    """Árbol antiguo: tronco grueso y copa formada por tres elipses."""
+    trunk_h = max(8, h // 4)
+    trunk_w = max(5, h // 9)          # los árboles antiguos tienen tronco ancho
     trunk = mix(body, (110, 76, 44), 0.55)
-    c.fill_rect(x - 2, base - trunk_h, 4, trunk_h, trunk)
+    c.fill_rect(x - trunk_w // 2, base - trunk_h, trunk_w, trunk_h, trunk)
+    c.vline(x - trunk_w // 2, base - trunk_h, base - 1,
+            mix(trunk, (0, 0, 0), 0.3))
     cy = base - trunk_h - h // 3
     c.ellipse(x, cy, h // 3, h // 4, body)
     c.ellipse(x - h // 5, cy + h // 6, h // 4, h // 5, body)
     c.ellipse(x + h // 5, cy + h // 6, h // 4, h // 5, body)
     # Manchita de luz arriba a la izquierda: da volumen sin degradados.
     c.ellipse(x - h // 7, cy - h // 10, h // 7, h // 10, light)
-
-
-def _conifer(c: Canvas, x: int, base: int, h: int, body) -> None:
-    """Conífera en silueta (línea de árboles lejana)."""
-    w = max(6, h // 3)
-    c.tri((x, base - h), (x - w, base), (x + w, base), body)
-    c.tri((x, base - h + h // 3), (x - w + 2, base), (x + w - 2, base),
-          mix(body, (255, 255, 255), 0.06))
 
 
 def _ground(c: Canvas, top, near, edge, grain: int = 0) -> None:
@@ -378,16 +342,17 @@ def _column(c: Canvas, x: int, base: int, h: int, body, light) -> None:
                 mix(body, (0, 0, 0), 0.16))
 
 
-def _planks(c: Canvas, wood, dark, light) -> None:
-    """Tablones del puente: bandas horizontales con juntas escalonadas."""
+def _bridge_deck(c: Canvas, stone, dark, light) -> None:
+    """Losas del puente de piedra: bandas horizontales con juntas
+    escalonadas (la trama de losas da la perspectiva de la superficie)."""
     for y in range(GROUND, H):
         t = (y - GROUND) / float(H - GROUND)
-        col = (wood, mix(wood, dark, 0.5), dark)[0 if t < 0.4 else
-                                                 (1 if t < 0.75 else 2)]
+        col = (stone, mix(stone, dark, 0.5), dark)[0 if t < 0.4 else
+                                                   (1 if t < 0.75 else 2)]
         for x in range(W):
             c.px[y][x] = (*col, 255)
     c.hline(0, W - 1, GROUND, dark)
-    # Juntas verticales: desplazadas en cada fila (trama de tablones)
+    # Juntas verticales: desplazadas en cada fila (trama de losas)
     row = 0
     y = GROUND + 3
     while y < H:
@@ -396,7 +361,7 @@ def _planks(c: Canvas, wood, dark, light) -> None:
             c.vline(x, y, min(y + 5, H - 1), mix(dark, (0, 0, 0), 0.3))
         y += 6
         row += 1
-    # Canto iluminado del tablón de arriba
+    # Canto iluminado de la losa de arriba
     c.hline(0, W - 1, GROUND + 1, light)
 
 
@@ -433,40 +398,52 @@ def _block_wall(c: Canvas, base_color, joint, y0: int = 0,
 #  Los cinco niveles — los escenarios del "El Héroe de las Matemáticas"
 # ---------------------------------------------------------------------------
 def level1() -> Canvas:
-    """El Bosque de las Sumas: claro nocturno, árboles y césped."""
+    """El Bosque de las Sumas: bosque verde y vibrante a plena luz
+    ("lush green fantasy forest, bright and vibrant, large ancient trees,
+    grass floor")."""
     c = Canvas(W, H)
-    _sky(c, (8, 20, 34), (26, 62, 58), steps=6)
-    _stars(c, 60, seed=7, color=(190, 220, 230, 255), y_max=90)
-    _moon(c, 402, 34, 11, (232, 240, 250), (130, 170, 220))
-    # Línea de coníferas lejana: sitúa el bosque sin robar atención
-    far = (10, 26, 30)
-    for x, h in ((14, 52), (44, 68), (78, 56), (110, 74), (150, 60),
-                 (250, 54), (300, 70), (338, 58), (372, 76), (412, 62),
-                 (452, 70)):
-        _conifer(c, x, GROUND + 4, h, far)
-    # Árboles grandes a los lados, con su mancha de luz
-    _tree(c, 56, GROUND + 6, 80, (16, 46, 40), (26, 74, 56))
-    _tree(c, 432, GROUND + 6, 92, (16, 46, 40), (26, 74, 56))
-    _tree(c, 124, GROUND + 8, 58, (14, 40, 36), (24, 66, 50))
-    _ground(c, (22, 58, 40), (16, 44, 32), (36, 84, 56))
-    # Símbolos matemáticos flotando entre los árboles
-    _runes(c, [("sum", 172, 56, 3), ("pi", 300, 44, 3),
-               ("theta", 88, 100, 3), ("times", 378, 86, 3)],
-           (170, 240, 190, 255), (60, 190, 120, 255), scale=3)
-    _fog(c, GROUND - 12, 14, (70, 140, 120), 0.45)
-    _vignette(c, strength=0.32)
+    # Cielo diurno brillante
+    _sky(c, (92, 172, 232), (176, 226, 246), steps=5)
+    # Sol con halo cuantizado
+    c.radial_glow(78, 36, 40, (255, 246, 186), 0.5, levels=4,
+                  blank_only=True)
+    c.circle(78, 36, 13, (255, 238, 150))
+    c.circle(75, 33, 9, (255, 249, 205))
+    # Colinas verdes lejanas
+    far = (60, 130, 76)
+    c.ellipse(104, GROUND - 6, 132, 34, far)
+    c.ellipse(352, GROUND - 4, 148, 30, mix(far, (255, 255, 255), 0.10))
+    # ÁRBOLES ANTIGUOS: troncos gruesos y copas enormes flanqueando la escena
+    _tree(c, 52, GROUND + 6, 118, (44, 96, 52), (88, 160, 80))
+    _tree(c, 438, GROUND + 6, 130, (44, 96, 52), (88, 160, 80))
+    _tree(c, 152, GROUND + 8, 76, (40, 88, 50), (78, 148, 72))
+    _tree(c, 344, GROUND + 8, 86, (40, 88, 50), (78, 148, 72))
+    # Suelo de césped vivo (tono medio: así los enemigos siguen destacando)
+    _ground(c, (46, 106, 56), (36, 86, 46), (68, 142, 72))
+    # Flores silvestres en la franja de suelo visible
+    for fx, col in ((36, (250, 220, 90)), (86, (240, 120, 140)),
+                    (196, (250, 244, 210)), (286, (250, 220, 90)),
+                    (404, (240, 120, 140)), (452, (255, 250, 230))):
+        c.put(fx, 159, col)
+        c.put(fx + 1, 159, mix(col, (255, 255, 255), 0.45))
+        c.put(fx, 160, mix(col, (0, 0, 0), 0.25))
+    _fog(c, GROUND - 8, 10, (170, 230, 200), 0.30)
+    _vignette(c, strength=0.24)
     return c
 
 
 def level2() -> Canvas:
-    """La Mina de la Multiplicación: roca, vetas de gemas y engranajes."""
+    """La Mina de la Multiplicación: mina enana subterránea con vigas de
+    madera, cristales luminosos, engranajes sueltos y suelo de piedra
+    ("underground dwarf mine, wooden support beams, glowing crystals and
+    scattered gears, stone floor")."""
     c = Canvas(W, H)
     # Subterránea: no hay cielo, solo pared de roca con veteado
     c.vgradient((6, 8, 16), (26, 28, 44), 0, GROUND - 1, steps=6)
     _stalactites(c, (4, 6, 12), seed=11, count=14)
     _stalactites(c, (10, 12, 22), seed=23, count=9, depth=15)
     c.speckle(0, 24, W, GROUND - 6, (34, 36, 56), density=0.05, seed=9)
-    # Maderos de sostén: dos cuadros de madera, el formato de una mina
+    # Vigas de madera de sostén: dos marcos, el sello de una mina enana
     wood, wood_edge = (74, 50, 30), (100, 70, 42)
     for bx in (44, 396):
         c.fill_rect(bx, GROUND - 74, 6, 74, wood)
@@ -474,85 +451,104 @@ def level2() -> Canvas:
         c.fill_rect(bx - 6, GROUND - 84, 52, 8, wood_edge)
         c.hline(bx - 6, bx + 45, GROUND - 74, mix(wood, (0, 0, 0), 0.35))
         c.vline(bx, GROUND - 74, GROUND - 1, mix(wood, (0, 0, 0), 0.3))
-    # Enranajes del viejo mecanismo de la mina
+    # Engranajes sueltos del viejo mecanismo de extracción
     _gear(c, 150, 60, 16, (92, 74, 40), (146, 120, 68))
     _gear(c, 180, 84, 10, (78, 62, 34), (126, 104, 60))
     _gear(c, 328, 68, 13, (92, 74, 40), (146, 120, 68))
-    # Vetas de gemas: cian, violeta y oro
+    # Cristales luminosos: cian, violeta y oro
     _gem(c, 240, 44, 9, (90, 230, 255), (60, 200, 255))
     _gem(c, 100, 122, 7, (200, 130, 255), (170, 100, 255))
     _gem(c, 386, 126, 8, (90, 230, 255), (60, 200, 255))
     _gem(c, 296, 116, 6, (255, 210, 110), (255, 190, 80))
-    _ground(c, (40, 38, 52), (30, 28, 40), (56, 52, 70), grain=0.10)
-    _runes(c, [("times", 232, 96, 3), ("div", 66, 100, 3),
-               ("times", 424, 92, 3)],
-           (255, 220, 150, 255), (220, 160, 60, 255), scale=3)
+    # Suelo de piedra: losas con juntas en perspectiva falsa
+    _floor(c, (54, 52, 62), (40, 38, 48), (72, 70, 84))
     _vignette(c, strength=0.36)
     return c
 
 
 def level3() -> Canvas:
-    """El Templo de las Fracciones: ruinas azules a la luz de la luna."""
+    """El Templo de las Fracciones: templo antiguo de piedra azul mística
+    con runas cian encendidas ("ancient ruined temple, mystical blue stone
+    architecture, glowing cyan runes")."""
     c = Canvas(W, H)
-    _sky(c, (8, 14, 40), (34, 64, 116), steps=6)
-    _stars(c, 70, seed=31, color=(200, 220, 255, 255), y_max=100)
-    _moon(c, 368, 36, 12, (235, 240, 252), (120, 150, 220))
-    # Frontón roto del templo (silueta lejana)
-    far = (16, 26, 56)
+    # Cielo nocturno hacia el azul místico del templo
+    _sky(c, (6, 16, 48), (26, 66, 124), steps=6)
+    _stars(c, 64, seed=31, color=(196, 232, 255, 255), y_max=96)
+    _moon(c, 398, 34, 11, (226, 244, 255), (96, 190, 240))
+    # Frontón roto del templo (silueta lejana) y muro trasero
+    far = (14, 30, 64)
     c.tri((146, 64), (334, 64), (240, 32), far)
     c.fill_rect(150, 64, 180, 8, far)                      # dintel
     c.fill_rect(150, 72, 180, GROUND - 72,
-                mix(far, (0, 0, 0), 0.15))                 # muro trasero
-    # Pórtico: dos columnas enteras flanqueando dos rotas
-    col = (30, 46, 86)
-    light = mix(col, (255, 255, 255), 0.22)
+                mix(far, (0, 0, 0), 0.18))                 # muro trasero
+    # Pórtico de PIEDRA AZUL: dos columnas enteras, una partida y una rota
+    col = (34, 58, 108)
+    light = mix(col, (150, 220, 255), 0.30)
     _column(c, 92, GROUND, 94, col, light)
     _column(c, 374, GROUND, 94, col, light)
     _column(c, 176, GROUND, 56, col, light)    # partida por la mitad
     _column(c, 302, GROUND, 40, col, light)    # solo queda la base
+    # Friso cian sobre el pórtico: la runa grande del templo
+    c.fill_rect(146, 68, 188, 3, mix(col, (0, 0, 0), 0.3))
+    stamp_glyph(c, "div", 240, 96, 6, (150, 245, 255, 255),
+                (50, 220, 255, 255))
     # Trozo caído y escombros bajo la columna partida
     c.fill_rect(206, GROUND - 11, 46, 10, mix(col, (0, 0, 0), 0.2))
-    c.vline(218, GROUND - 11, GROUND - 1, mix(col, (255, 255, 255), 0.18))
-    c.speckle(190, GROUND - 12, 336, GROUND, mix(col, (0, 0, 0), 0.35),
+    c.vline(218, GROUND - 11, GROUND - 1, mix(col, (150, 220, 255), 0.24))
+    c.speckle(190, GROUND - 12, 336, GROUND, mix(col, (0, 0, 0), 0.4),
               density=0.12, seed=17)
-    _floor(c, (30, 44, 78), (22, 32, 58), (48, 70, 116))
-    _runes(c, [("div", 240, 48, 4), ("pm", 72, 100, 3),
-               ("neq", 414, 90, 3), ("int", 128, 40, 3)],
-           (160, 220, 255, 255), (70, 140, 230, 255), scale=3)
-    _fog(c, GROUND - 14, 16, (70, 110, 190), 0.5)
+    # Suelo de losas azules
+    _floor(c, (32, 52, 96), (22, 36, 70), (56, 88, 140))
+    # Runas cian flotando: los símbolos del templo
+    _runes(c, [("pm", 66, 96, 3), ("neq", 420, 88, 3),
+               ("int", 124, 36, 3), ("theta", 330, 40, 3)],
+           (150, 245, 255, 255), (50, 220, 255, 255), scale=3)
+    _fog(c, GROUND - 14, 16, (60, 140, 210), 0.5)
     _vignette(c, strength=0.34)
     return c
 
 
+def _nebula(c: Canvas, cx: int, cy: int, rx: int, ry: int,
+            dark, mid, light) -> None:
+    """Nube cósmica: tres parches elípticos superpuestos en tonos planos.
+
+    Las nubes púrpura del espacio se resuelven con bandas discretas (como
+    el resto del fondo): un degradado suave convertiría el cielo del
+    nivel 4 en una fotografía y dispararía el número de colores.
+    """
+    c.ellipse(cx, cy, rx, ry, dark)
+    c.ellipse(cx - rx // 4, cy - ry // 3, max(4, int(rx * 0.60)),
+              max(3, int(ry * 0.58)), mid)
+    c.ellipse(cx - rx // 3, cy - ry // 3, max(3, int(rx * 0.32)),
+              max(2, int(ry * 0.30)), light)
+    # Borde superior iluminado: una sola fila de píxeles claros
+    c.hline(cx - rx // 2, cx + rx // 2, cy - ry + 1,
+            mix(mid, (255, 255, 255), 0.25))
+
+
 def level4() -> Canvas:
-    """El Puente Hacia el Caos: puente oscuro bajo cielo estrellado."""
+    """El Puente Hacia el Caos: largo puente de piedra suspendido en el
+    espacio, cielo estrellado y nubes cósmicas púrpura ("a long dark stone
+    bridge suspended in space, starry night sky with purple cosmic
+    clouds")."""
     c = Canvas(W, H)
-    _sky(c, (3, 3, 14), (28, 22, 70), steps=7)
-    _stars(c, 150, seed=47, color=(230, 230, 255, 255), y_max=132)
-    # Dos planetas lejanos: el puente va hacia el caos, no hacia la Tierra
-    c.radial_glow(112, 48, 30, (70, 200, 220), 0.35, levels=4,
-                  blank_only=True)
-    c.circle(112, 48, 13, (46, 130, 160))
-    c.circle(108, 44, 9, (86, 190, 210))
-    c.radial_glow(372, 34, 22, (190, 110, 220), 0.35, levels=4,
-                  blank_only=True)
-    c.circle(372, 34, 7, (170, 100, 210))
-    c.circle(370, 32, 5, (220, 155, 240))
-    # Crestas lejanas recortadas contra el cielo
-    far = (10, 8, 30)
-    c.tri((24, GROUND), (108, 110), (192, GROUND), far)
-    c.tri((150, GROUND), (252, 98), (352, GROUND),
-          mix(far, (255, 255, 255), 0.06))
-    c.tri((312, GROUND), (402, 114), (474, GROUND), far)
-    # La torre del final del puente: la meta vislumbrada a lo lejos
-    _tower(c, 226, GROUND - 3, 28, 72, (14, 10, 40),
-           mix(far, (255, 255, 255), 0.12), windows=((8, 18), (17, 40)))
-    _planks(c, (52, 38, 34), (32, 22, 24), (78, 56, 48))
-    _bridge_rail(c, (40, 30, 40), (68, 56, 84))
-    _runes(c, [("sqrt", 68, 74, 3), ("theta", 300, 56, 3),
-               ("inf", 418, 100, 3)],
-           (200, 210, 255, 255), (120, 130, 255, 255), scale=3)
-    _fog(c, GROUND - 10, 12, (70, 60, 150), 0.5)
+    _sky(c, (4, 3, 18), (48, 24, 96), steps=7)
+    _stars(c, 170, seed=47, color=(235, 234, 255, 255), y_max=152)
+    # Nubes cósmicas púrpura a ambos lados del puente
+    _nebula(c, 102, 56, 82, 26, (42, 16, 76), (76, 32, 126), (114, 58, 172))
+    _nebula(c, 378, 42, 66, 20, (38, 14, 70), (68, 28, 116), (104, 50, 158))
+    _nebula(c, 258, 78, 54, 16, (34, 12, 64), (62, 26, 108), (96, 46, 148))
+    # Resplandor del otro extremo: la grieta del caos hacia la que va el puente
+    c.radial_glow(240, GROUND - 30, 64, (160, 74, 230), 0.34,
+                  levels=4, blank_only=True)
+    # El puente: losas de piedra oscura y barandilla
+    _bridge_deck(c, (58, 52, 78), (28, 24, 44), (96, 90, 122))
+    _bridge_rail(c, (34, 28, 46), (70, 58, 96))
+    # Símbolos matemáticos flotando sobre el vacío
+    _runes(c, [("sqrt", 62, 74, 3), ("theta", 306, 54, 3),
+               ("inf", 424, 104, 3), ("pi", 176, 40, 3)],
+           (214, 208, 255, 255), (150, 110, 255, 255), scale=3)
+    _fog(c, GROUND - 10, 12, (96, 52, 168), 0.5)
     _vignette(c, strength=0.40)
     return c
 
@@ -563,28 +559,33 @@ def level5() -> Canvas:
     c = Canvas(W, H)
     wall = (18, 10, 30)
     _block_wall(c, wall, mix(wall, (0, 0, 0), 0.35), 0, GROUND)
-    # Bóveda: arcos concéntricos que arrancan de las esquinas
+    # Bóveda gótica: arcos apuntados concéntricos desde las esquinas
     for k in range(3):
         c.ellipse(W // 2, -12 + k * 2, W // 2 - 26 - k * 34, 96 + k * 30,
                   mix(wall, (255, 255, 255), 0.12), fill=False)
         c.ellipse(W // 2, -12 + k * 2, W // 2 - 25 - k * 34, 95 + k * 30,
                   mix(wall, (0, 0, 0), 0.35), fill=False)
-    # Pilares del salón
+    # Pilares góticos: fuste con capitel y pináculo apuntado
     for px in (16, 448):
         c.fill_rect(px, 0, 16, GROUND, mix(wall, (255, 255, 255), 0.06))
         c.vline(px, 0, GROUND - 1, mix(wall, (255, 255, 255), 0.16))
         c.vline(px + 15, 0, GROUND - 1, mix(wall, (0, 0, 0), 0.3))
         c.fill_rect(px - 3, 18, 22, 5, mix(wall, (255, 255, 255), 0.10))
-    # Portales de neón: uno grande al centro y dos laterales
-    _portal(c, 200, GROUND + 2, 56, 108, (16, 60, 84), (52, 220, 255),
-            (80, 230, 255), arcs=4)
+        # Pináculo: dos triángulos (contorno claro + relleno oscuro)
+        c.tri((px - 5, 18), (px + 23, 18), (px + 9, -4),
+              mix(wall, (255, 255, 255), 0.18))
+        c.tri((px - 2, 16), (px + 20, 16), (px + 9, 1),
+              mix(wall, (0, 0, 0), 0.25))
+    # Portales de neón púrpura: uno grande al centro y dos laterales
+    _portal(c, 200, GROUND + 2, 56, 108, (58, 16, 86), (176, 92, 255),
+            (150, 80, 255), arcs=4)
     _portal(c, 62, GROUND + 2, 34, 72, (64, 14, 62), (255, 90, 220),
             (255, 120, 235), arcs=3)
     _portal(c, 384, GROUND + 2, 34, 72, (64, 14, 62), (255, 90, 220),
             (255, 120, 235), arcs=3)
     # Suelo pulido con reflejo del neón bajo cada portal
     _floor(c, (26, 16, 40), (18, 10, 28), (44, 28, 62))
-    for gx, col in ((228, (60, 200, 255)), (79, (230, 90, 210)),
+    for gx, col in ((228, (170, 96, 255)), (79, (230, 90, 210)),
                     (401, (230, 90, 210))):
         for i in range(10):
             c.blend(gx, GROUND + 3 + i * 2, (*col, max(0, 70 - i * 7)))

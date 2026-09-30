@@ -58,6 +58,7 @@ MENU_W = SCREEN_WIDTH - PANEL_X - 20 - MENU_X   # 444
 MENU_Y = 452
 MENU_BTN_H = 44
 MENU_BTN_GAP = 8
+MENU_BTN_STEP = MENU_BTN_H + MENU_BTN_GAP   # paso vertical entre botones
 FEEDBACK_RECT = (MENU_X, 664, MENU_W, 32)  # esquina inferior derecha
 
 # Nombres de archivo de fuentes (si existen en assets/fonts/ se usan)

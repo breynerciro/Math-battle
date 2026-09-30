@@ -23,17 +23,20 @@ class ParallaxLayer:
     """Capa de parallax que se mueve a velocidad variable."""
 
     def __init__(self, surface, speed_factor=0.1, y_offset=0):
+        """Crea la capa: su imagen, qué tan rápido se mueve y su altura."""
         self.surface = surface
         self.speed_factor = speed_factor
         self.y_offset = y_offset
         self.offset_x = 0.0
 
     def update(self, dt, camera_movement=0):
+        """Un frame: desplaza la capa según su velocidad de parallax."""
         self.offset_x += camera_movement * self.speed_factor * dt
         if self.surface:
             self.offset_x %= self.surface.get_width()
 
     def render(self, screen, base_x=0, base_y=0):
+        """Dibuja la capa dos veces para que parezca infinita."""
         if not self.surface:
             return
         x = int(base_x - self.offset_x)
@@ -47,6 +50,8 @@ class AmbientParticle:
     """Partícula ambiental con comportamiento temático."""
 
     def __init__(self, x, y, particle_type, level):
+        """Crea una partícula con su tipo (hoja, polvo, chispa...) y sus
+        propiedades de movimiento y color ya calculadas."""
         self.x = x
         self.y = y
         self.type = particle_type
@@ -86,6 +91,7 @@ class AmbientParticle:
             self.pulse_speed = random.uniform(2, 4)
 
     def update(self, dt):
+        """Un frame: la mueve según su tipo. Devuelve False al morir."""
         self.life -= dt
         if self.life <= 0:
             return False
@@ -116,6 +122,7 @@ class AmbientParticle:
         return True
 
     def render(self, screen):
+        """Dibuja la partícula (con alfa según lo que le queda de vida)."""
         alpha = int(255 * (self.life / self.max_life))
         
         if self.type == "leaf":
@@ -150,6 +157,7 @@ class Scenario:
     """Escenario dinámico con capas de parallax y partículas ambientales."""
 
     def __init__(self, level):
+        """Monta el escenario del nivel: fondo, capas, partículas y luces."""
         self.level = level
         self.base_background = get_background(level)
         self.layers = []
@@ -163,6 +171,7 @@ class Scenario:
         self._setup_light_effects()
 
     def _setup_layers(self):
+        """Crea las 3 capas de parallax con los colores del tema del nivel."""
         # Colores por tema del nivel: bosque, mina, templo azul,
         # puente nocturno y castillo del caos.
         config_map = {
@@ -180,18 +189,34 @@ class Scenario:
             self.layers.append(ParallaxLayer(layer_surface, speed, i * 20))
 
     def _create_parallax_layer(self, color, depth):
+        """Pinta UNA capa: silueta de fondo según el nivel (árboles, rocas,
+        columnas...). `depth` 0 = lejana, 2 = cercana.
+
+        IMPORTANTE: la capa NO lleva relleno de color (solo las siluetas).
+        Un relleno translúcido sobre toda la pantalla actuaba como un velo
+        que turbia el fondo: se llamaba "transparencia verde" en el nivel 1.
+        """
         surface = pygame.Surface((config.SCREEN_WIDTH * 2, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        surface.fill((*color, 80 - depth * 20))
         
         if self.level == 1:
-            for _ in range(8 - depth * 2):
-                x = random.randint(0, surface.get_width() - 60)
-                h = random.randint(80, 150 - depth * 20)
-                w = random.randint(40, 60)
-                y = config.GROUND_Y - h
-                dark_color = tuple(max(0, c - 20) for c in color)
-                pygame.draw.polygon(surface, (*dark_color, 150),
-                                  [(x + w // 2, y), (x, y + h), (x + w, y + h)])
+            # Bosque diurno: copas de árboles lejanos (elipses) en los
+            # verdes del propio fondo. Antes eran triángulos oscuros muy
+            # transparentes y se leían como un velo verde sobre la imagen.
+            verdes = [(52, 118, 62, 130), (44, 102, 54, 120),
+                      (64, 134, 72, 140)]
+            for k in range(9 - depth * 2):
+                x = 40 + k * 300 + depth * 90
+                h = 70 + (k % 2) * 26 - depth * 12
+                top = config.GROUND_Y - h
+                r, g, b, a = verdes[(k + depth) % len(verdes)]
+                # Tronco corto y copa ancha: el perfil de un árbol lejano
+                pygame.draw.rect(surface, (r - 14, g - 18, b - 12, a),
+                                 (x - 5, top + h // 3, 10, h - h // 3))
+                pygame.draw.ellipse(surface, (r, g, b, a),
+                                    (x - h // 3, top, (h // 3) * 2, h // 2))
+                pygame.draw.ellipse(surface, (r + 16, g + 20, b + 12, a),
+                                    (x - h // 4, top + h // 6,
+                                     h // 2, h // 3))
         elif self.level == 2:
             for x in range(0, surface.get_width(), 40 + depth * 10):
                 h = random.randint(30, 80 - depth * 15)
@@ -221,6 +246,7 @@ class Scenario:
         return surface
 
     def _setup_ambient_particles(self):
+        """Elige la partícula ambiental que le toca a cada nivel."""
         # Partícula temática de cada nivel:
         #   1 bosque (hojas) · 2 mina (polvo) · 3 templo (chispas de runa)
         #   4 puente (estrellas fugaces) · 5 castillo (cristales de neón)
@@ -234,6 +260,7 @@ class Scenario:
         self.particle_type = particle_types.get(self.level, "dust")
 
     def _setup_light_effects(self):
+        """Coloca las luces pulsantes (solo la mina tiene gemas brillantes)."""
         if self.level == 2:
             # Vetas de gemas brillando en la mina
             for _ in range(5):
@@ -248,6 +275,7 @@ class Scenario:
                 })
 
     def update(self, dt, camera_movement=0):
+        """Un frame: capas, partículas ambientales y pulsos de luz."""
         self.time += dt
         
         for layer in self.layers:
@@ -265,6 +293,7 @@ class Scenario:
             effect["pulse"] += effect["speed"] * dt
 
     def _spawn_particle(self):
+        """Crea UNA partícula en el borde de la pantalla, según su tipo."""
         if self.particle_type == "leaf":
             x = random.randint(config.SCREEN_WIDTH, config.SCREEN_WIDTH + 100)
             y = random.randint(0, config.GROUND_Y - 50)
@@ -287,6 +316,7 @@ class Scenario:
             self.particles.append(AmbientParticle(x, y, "crystal", self.level))
 
     def render(self, screen, offset_x=0, offset_y=0):
+        """Dibuja todo el escenario en orden: fondo, capas, luces, partículas."""
         screen.blit(self.base_background, (offset_x, offset_y))
         
         for layer in self.layers:
@@ -299,6 +329,7 @@ class Scenario:
             particle.render(screen)
 
     def _render_light_effect(self, screen, effect, offset_x, offset_y):
+        """Dibuja UNA luz pulsante (el brillo de las gemas de la mina)."""
         x = int(effect["x"] + offset_x)
         y = int(effect["y"] + offset_y)
         radius = effect["radius"]

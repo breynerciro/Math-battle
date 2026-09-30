@@ -23,6 +23,7 @@ from src.math_engine import operations, equations, powers_roots, fractions, geom
 
 @pytest.fixture
 def generator():
+    """Una instancia del repartidor de retos (con sus 4 opciones)."""
     return ChallengeGenerator()
 
 
@@ -116,6 +117,7 @@ def _eval_side(side, x):
 
 @pytest.mark.parametrize("difficulty", [1, 2, 3, 4, 5])
 def test_equations_answers_are_correct(difficulty):
+    """La x que devuelve cada ecuación DEBE satisfacer la ecuación."""
     for _ in range(50):
         c = equations.generate(difficulty)
         assert isinstance(c.answer, int), f"x debe ser entero: {c.question}"
@@ -168,6 +170,7 @@ def test_fraction_check_accepts_slash_format():
 #  Geometría (nivel 4): respuestas positivas y con unidades
 # ---------------------------------------------------------------------- #
 def test_geometry_answers_positive_with_units():
+    """Las respuestas de geometría son positivas y llevan unidad."""
     for _ in range(50):
         c = geometry.generate(5)
         assert c.answer > 0
@@ -178,6 +181,7 @@ def test_geometry_answers_positive_with_units():
 #  Validación de respuestas (tolerancia numérica)
 # ---------------------------------------------------------------------- #
 def test_check_answer_integer_exact():
+    """check_answer compara enteros exactos (y rechaza basura como 'abc')."""
     from src.math_engine.challenge import MathChallenge
     c = MathChallenge(question="test", answer=56)
     assert c.check_answer(56) is True
@@ -188,6 +192,7 @@ def test_check_answer_integer_exact():
 
 
 def test_check_answer_float_tolerance():
+    """Los decimales se comparan con tolerancia de 0.01 (errores de redondeo)."""
     from src.math_engine.challenge import MathChallenge
     c = MathChallenge(question="test", answer=3.14)
     assert c.check_answer(3.14) is True

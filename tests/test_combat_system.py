@@ -30,6 +30,7 @@ class FakeEnemy:
     """Enemigo mínimo sin sprites (no necesita Pygame)."""
 
     def __init__(self, hp=100, attack=20, is_boss=False, difficulty=2):
+        """Enemigo de prueba: solo estadísticas, sin sprites ni Pygame."""
         self.name = "Fake"
         self.max_hp = hp
         self.hp = hp
@@ -39,10 +40,12 @@ class FakeEnemy:
         self.is_boss = is_boss
 
     def take_damage(self, damage):
+        """Resta la vida igual que el enemigo real (sin animaciones)."""
         self.hp = max(0, self.hp - damage)
         return damage
 
     def is_dead(self):
+        """True cuando su vida llegó a 0."""
         return self.hp <= 0
 
 
@@ -50,11 +53,13 @@ class FakeGenerator:
     """Generador que SIEMPRE devuelve el mismo reto controlado."""
 
     def __init__(self, answer=7, time_limit=30):
+        """Reto fijo: la respuesta es 7 y la opción A (índice 0) es la buena."""
         self.answer = answer
         self.time_limit = time_limit
         self.last_difficulty = None
 
     def generate(self, topic, difficulty):
+        """Devuelve SIEMPRE el mismo reto de 4 opciones (controlado)."""
         self.last_difficulty = difficulty
         return MathChallenge(
             question="¿Cuánto es 7?",
@@ -70,6 +75,7 @@ class FakeGenerator:
 
 @pytest.fixture
 def setup():
+    """Dobles de prueba: un jugador y un enemigo SIN Pygame (más rápido)."""
     player = Player.__new__(Player)      # crear SIN sprites (sin Pygame)
     player.name = "Test"
     player.max_hp = 100
@@ -88,11 +94,13 @@ def setup():
     player.is_dead = lambda: player.hp <= 0
 
     def take_damage(damage):
+        """Igual que Player.take_damage real: resta el daño tal cual."""
         player.hp = max(0, player.hp - damage)
         return damage
     player.take_damage = take_damage
 
     def register_correct(challenge, response_time):
+        """Igual que Player.register_correct: suma puntos y sube el combo."""
         player.score += challenge.points
         player.combo += 1
         player.max_combo = max(player.max_combo, player.combo)
@@ -100,6 +108,7 @@ def setup():
     player.register_correct = register_correct
 
     def register_wrong():
+        """Igual que Player.register_wrong: rompe el combo."""
         player.combo = 0
         player.wrong_count += 1
     player.register_wrong = register_wrong
@@ -114,6 +123,7 @@ def setup():
 #  Turnos
 # ---------------------------------------------------------------------- #
 def test_correct_answer_damages_enemy(setup):
+    """Acertar la opción correcta hace 25 de daño y pasa a fase de ataque."""
     player, enemy, generator, combat = setup
     combat.start_challenge(enemy)
     result = combat.submit_answer("7")
@@ -141,6 +151,7 @@ def test_submit_option_by_index(setup):
 
 
 def test_wrong_answer_counterattacks(setup):
+    """Elegir mal hace que el enemigo contraataque por 15 de daño."""
     player, enemy, generator, combat = setup
     combat.start_challenge(enemy)
     hp_before = player.hp
@@ -152,6 +163,7 @@ def test_wrong_answer_counterattacks(setup):
 
 
 def test_timeout_counts_as_wrong(setup):
+    """Agotar el tiempo sin elegir cuenta como error (mismo daño: 15)."""
     player, enemy, generator, combat = setup
     combat.start_challenge(enemy)
     combat.challenge_time = generator.time_limit + 1   # simular espera total
@@ -163,6 +175,7 @@ def test_timeout_counts_as_wrong(setup):
 
 
 def test_enemy_death_sets_phase_and_heals(setup):
+    """El último golpe mata al enemigo y cura un poco al héroe."""
     player, enemy, generator, combat = setup
     enemy.hp = 5                                       # casi muerto
     combat.start_challenge(enemy)
@@ -173,6 +186,7 @@ def test_enemy_death_sets_phase_and_heals(setup):
 
 
 def test_player_death_sets_defeat(setup):
+    """Si el héroe se queda sin vida, el combate pasa a fase de derrota."""
     player, enemy, generator, combat = setup
     player.hp = 1
     combat.start_challenge(enemy)
@@ -197,6 +211,7 @@ def test_damage_is_fixed_for_bosses_too(setup):
 
 
 def test_timer_runs_only_in_challenge_phase(setup):
+    """El cronómetro solo corre mientras la pregunta está en pantalla."""
     player, enemy, generator, combat = setup
     combat.start_challenge(enemy)
     combat.update(2.0)
@@ -208,6 +223,7 @@ def test_timer_runs_only_in_challenge_phase(setup):
 
 
 def test_difficulty_passed_to_generator(setup):
+    """La dificultad del enemigo llega hasta el generador de retos."""
     player, enemy, generator, combat = setup
     enemy.difficulty = 4
     combat.start_challenge(enemy)
@@ -242,6 +258,7 @@ def test_player_damage_is_flat(setup):
 
 
 def test_player_heal_caps_at_max(setup):
+    """Curar nunca sube la vida por encima del máximo (100)."""
     player = setup[0]
     player.hp = 90
     player.heal(50)

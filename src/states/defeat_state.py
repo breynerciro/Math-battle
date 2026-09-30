@@ -18,6 +18,7 @@ class DefeatState(BaseState):
     """Game over: se acabaron las vidas."""
 
     def __init__(self, game, player, level=1):
+        """Game over: registra la partida y crea REINTENTAR / MENÚ."""
         super().__init__(game)
         self.player = player
         self.level = level
@@ -51,6 +52,7 @@ class DefeatState(BaseState):
         self.game.change_state(BattleState(self.game, self.level))
 
     def _go_menu(self):
+        """MENÚ → vuelve al menú principal (borra el héroe de esta partida)."""
         self.sounds.play("click")
         from .menu_state import MenuState
         self.game.player = None
@@ -58,6 +60,7 @@ class DefeatState(BaseState):
 
     # ------------------------------------------------------------------ #
     def handle_events(self, events):
+        """Clics en los botones; Enter también reintenta el nivel."""
         for event in events:
             for button in self.buttons:
                 button.handle_event(event)
@@ -65,10 +68,12 @@ class DefeatState(BaseState):
                 self._retry()
 
     def update(self, dt):
+        """Un frame: actualiza el efecto hover de los botones."""
         for button in self.buttons:
             button.update(dt)
 
     def render(self, screen):
+        """Dibuja GAME OVER, la frase motivadora, las stats y los botones."""
         screen.fill(config.BLACK)
         cx = config.SCREEN_WIDTH // 2
 

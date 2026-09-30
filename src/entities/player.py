@@ -18,6 +18,7 @@ class Player:
     """El héroe que controla el estudiante."""
 
     def __init__(self) -> None:
+        """Crea al héroe con vida, puntuación y animaciones al máximo."""
         # -- Identidad ------------------------------------------------------
         self.name: str = "Matías"
 
@@ -60,6 +61,7 @@ class Player:
         self.hp = min(self.max_hp, self.hp + amount)
 
     def is_dead(self) -> bool:
+        """True cuando la vida del héroe llegó a 0."""
         return self.hp <= 0
 
     # ------------------------------------------------------------------ #
@@ -97,6 +99,7 @@ class Player:
         self.sprites[self.current_animation].render(screen, x, y)
 
     def update(self, dt: float) -> None:
+        """Un frame: avanza la animación actual del héroe."""
         sprite = self.sprites[self.current_animation]
         sprite.update(dt)
         # Las animaciones de golpe/ataque vuelven a "idle" al terminar

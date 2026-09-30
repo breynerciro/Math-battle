@@ -41,6 +41,8 @@ def _distractors(answer, style: str, suffix: str, count: int = 3):
     found = []
 
     def consider(candidate):
+        """Acepta un candidato si es válido: distinto de la correcta,
+        no repetido y (si el resultado es positivo) también positivo."""
         try:
             if is_fraction:
                 candidate = Fraction(candidate)

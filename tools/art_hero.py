@@ -206,6 +206,8 @@ def _book(c: Canvas, x, y) -> None:
 #  Frames
 # ---------------------------------------------------------------------------
 def _idle(dy: int, sway: int, blink: bool, glow: float) -> Canvas:
+    """Compone UN frame de descanso con los parámetros dados: cabeceo
+    (`dy`), balanceo de capa (`sway`), parpadeo y brillo del bastón."""
     c = Canvas(W, H)
     _cape(c, sway)
     _legs(c, stance=0, crouch=dy)

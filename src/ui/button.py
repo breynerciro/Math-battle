@@ -23,6 +23,10 @@ class Button:
     def __init__(self, x, y, w, h, text, on_click=None,
                  color=config.DARK_BLUE, hover_color=config.BLUE,
                  text_color=config.WHITE, font_size=config.FONT_SIZE_MEDIUM):
+        """Crea el botón en la posición (x, y) con su texto y colores.
+
+        `on_click` es la función que se llama al hacer clic (o None).
+        """
         self.rect = pygame.Rect(x, y, w, h)
         self.text = text
         self.on_click = on_click

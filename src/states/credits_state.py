@@ -33,6 +33,7 @@ class CreditsState(BaseState):
     ]
 
     def __init__(self, game):
+        """Crea el botón VOLVER; los textos viven en la lista LINES."""
         super().__init__(game)
         self.sounds = SoundManager()
         self.back_button = Button(
@@ -41,21 +42,25 @@ class CreditsState(BaseState):
             font_size=config.FONT_SIZE_MEDIUM)
 
     def _go_menu(self):
+        """VOLVER → regresa al menú principal."""
         self.sounds.play("click")
         from .menu_state import MenuState
         self.game.change_state(MenuState(self.game))
 
     # ------------------------------------------------------------------ #
     def handle_events(self, events):
+        """Clic en VOLVER o tecla Esc para salir."""
         for event in events:
             self.back_button.handle_event(event)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self._go_menu()
 
     def update(self, dt):
+        """Un frame: actualiza el hover del botón VOLVER."""
         self.back_button.update(dt)
 
     def render(self, screen):
+        """Dibuja la lista de créditos línea a línea."""
         screen.fill(config.BLACK)
         y = 80
         for text, size, color in self.LINES:
