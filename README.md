@@ -39,6 +39,7 @@ con CMD/PowerShell usa `venv\Scripts\python main.py`. El antiguo
 | Elegir opción de respuesta | Clic en A/B/C/D o teclas `1` `2` `3` `4` |
 | Empezar el turno (ATACAR) | Clic en el botón o `Enter` |
 | Abandonar la batalla | `Esc` |
+| Apagar/encender la música | Botón **MÚSICA** (esquina superior derecha del menú) |
 
 ---
 
