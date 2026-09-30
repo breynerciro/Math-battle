@@ -163,12 +163,14 @@ class Scenario:
         self._setup_light_effects()
 
     def _setup_layers(self):
+        # Colores por tema del nivel: bosque, mina, templo azul,
+        # puente nocturno y castillo del caos.
         config_map = {
             1: {"layers": [0.05, 0.1, 0.2], "colors": [(20, 70, 20), (30, 90, 30), (40, 110, 40)]},
-            2: {"layers": [0.03, 0.08, 0.15], "colors": [(30, 30, 50), (35, 35, 60), (40, 40, 70)]},
-            3: {"layers": [0.04, 0.09, 0.18], "colors": [(90, 40, 110), (105, 50, 125), (120, 60, 140)]},
-            4: {"layers": [0.06, 0.12, 0.22], "colors": [(35, 70, 30), (42, 80, 35), (50, 90, 40)]},
-            5: {"layers": [0.05, 0.1, 0.2], "colors": [(70, 30, 30), (80, 35, 35), (90, 40, 40)]},
+            2: {"layers": [0.03, 0.08, 0.15], "colors": [(50, 40, 26), (62, 50, 32), (74, 60, 40)]},
+            3: {"layers": [0.04, 0.09, 0.18], "colors": [(30, 52, 96), (38, 64, 116), (46, 76, 136)]},
+            4: {"layers": [0.06, 0.12, 0.22], "colors": [(24, 24, 72), (32, 32, 92), (40, 40, 112)]},
+            5: {"layers": [0.05, 0.1, 0.2], "colors": [(52, 26, 52), (64, 32, 62), (76, 38, 72)]},
         }
         
         cfg = config_map.get(self.level, config_map[1])
@@ -219,17 +221,21 @@ class Scenario:
         return surface
 
     def _setup_ambient_particles(self):
+        # Partícula temática de cada nivel:
+        #   1 bosque (hojas) · 2 mina (polvo) · 3 templo (chispas de runa)
+        #   4 puente (estrellas fugaces) · 5 castillo (cristales de neón)
         particle_types = {
             1: "leaf",
             2: "dust",
             3: "spark",
-            4: "bubble",
+            4: "spark",
             5: "crystal"
         }
         self.particle_type = particle_types.get(self.level, "dust")
 
     def _setup_light_effects(self):
         if self.level == 2:
+            # Vetas de gemas brillando en la mina
             for _ in range(5):
                 x = random.randint(50, config.SCREEN_WIDTH - 50)
                 y = random.randint(config.GROUND_Y - 100, config.GROUND_Y - 20)
@@ -240,16 +246,6 @@ class Scenario:
                     "pulse": random.uniform(0, math.pi * 2),
                     "speed": random.uniform(1.5, 3)
                 })
-        elif self.level == 3:
-            for wx in range(80, config.SCREEN_WIDTH, 180):
-                for wy in range(60, config.GROUND_Y - 60, 120):
-                    self.light_effects.append({
-                        "type": "window_glow",
-                        "x": wx + 23, "y": wy + 33,
-                        "radius": 20,
-                        "pulse": random.uniform(0, math.pi * 2),
-                        "speed": random.uniform(0.8, 1.5)
-                    })
 
     def update(self, dt, camera_movement=0):
         self.time += dt
@@ -313,14 +309,5 @@ class Scenario:
             glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
             alpha = int(80 * brightness)
             pygame.draw.circle(glow_surface, (*config.CYAN, alpha),
-                             (glow_radius, glow_radius), glow_radius)
-            screen.blit(glow_surface, (x - glow_radius, y - glow_radius))
-        
-        elif effect["type"] == "window_glow":
-            brightness = int(0.6 + 0.4 * math.sin(effect["pulse"]))
-            glow_radius = radius + brightness * 5
-            glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
-            alpha = int(60 * brightness)
-            pygame.draw.circle(glow_surface, (*config.YELLOW, alpha),
                              (glow_radius, glow_radius), glow_radius)
             screen.blit(glow_surface, (x - glow_radius, y - glow_radius))

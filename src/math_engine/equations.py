@@ -1,6 +1,6 @@
 """
-equations.py — Nivel 2: Ecuaciones lineales
-===========================================
+equations.py — Ecuaciones lineales (Niveles 4 y 5)
+===================================================
 
 Truco para que las respuestas siempre sean bonitas (enteras):
 generamos PRIMERO la solución x y DESPUÉS construimos la ecuación.
@@ -28,6 +28,18 @@ def generate(difficulty: int) -> MathChallenge:
         5: _gen_level5,
     }
     return generators.get(difficulty, _gen_level1)(difficulty)
+
+
+def generate_first_degree(difficulty: int) -> MathChallenge:
+    """Ecuaciones de primer grado sencillas (Nivel 4: x − 15 = 30)."""
+    func = random.choice([_gen_level1, _gen_level2, _gen_level3])
+    return func(difficulty)
+
+
+def generate_algebra(difficulty: int) -> MathChallenge:
+    """Álgebra intermedia (Nivel 5: 4(x + 2) − 7 = 21, x a dos lados)."""
+    func = random.choice([_gen_level3, _gen_level4, _gen_level5])
+    return func(difficulty)
 
 
 def _make(question, x, difficulty, hint):

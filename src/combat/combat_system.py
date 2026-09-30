@@ -4,18 +4,16 @@ combat_system.py — La lógica del combate
 
 Coordina el flujo de cada turno (ver el diagrama del plan):
 
-1. El jugador elige ATACAR → se pide un reto matemático.
-2. Si responde BIEN y a tiempo → hace daño al enemigo.
-   - El daño depende de la velocidad: responder rápido pega más fuerte.
-3. Si responde MAL o se agota el tiempo → el enemigo contraataca.
-   - Si se agotó el tiempo, el golpe duele la mitad (es menos injusto).
+1. El jugador elige ATACAR → se pide un reto matemático con 4 opciones.
+2. Si elige la opción CORRECTA → lanza su hechizo y hace daño FIJO al
+   enemigo (HERO_DAMAGE = 25).
+3. Si FALLA o se agota el tiempo → el enemigo contraataca con daño
+   FIJO (COUNTER_DAMAGE = 15).
 4. Cuando el enemigo muere → el jugador recupera algo de vida y pasa
    al siguiente enemigo del nivel (o al boss).
 
 Esta clase SOLO calcula: no dibuja nada (eso lo hacen los estados).
 """
-
-import random
 
 from .. import config
 
@@ -57,7 +55,15 @@ class CombatSystem:
         return self.challenge
 
     def submit_answer(self, user_answer):
-        """Evalúa la respuesta del jugador.
+        """Evalúa una respuesta escrita (compatibilidad con tests/herramientas)."""
+        timed_out = self.challenge_time >= self.challenge.time_limit
+        correct = (not timed_out) and self.challenge.check_answer(user_answer)
+        return self._finish(correct, timed_out)
+
+    def submit_option(self, index):
+        """Evalúa la OPCIÓN elegida por el jugador (0=A, 1=B, 2=C, 3=D).
+
+        index puede ser None (se agotó el tiempo y no se eligió nada).
 
         Devuelve un diccionario con el resultado del turno para que
         battle_state lo anime:
@@ -71,8 +77,12 @@ class CombatSystem:
                 "player_died": bool,
             }
         """
-        timed_out = self.challenge_time >= self.challenge.time_limit
-        correct = (not timed_out) and self.challenge.check_answer(user_answer)
+        timed_out = (index is None or
+                     self.challenge_time >= self.challenge.time_limit)
+        correct = (not timed_out) and self.challenge.check_option(index)
+        return self._finish(correct, timed_out)
+
+    def _finish(self, correct, timed_out):
         result = {
             "correct": correct,
             "timeout": timed_out,
@@ -92,13 +102,8 @@ class CombatSystem:
     #  Daños
     # ------------------------------------------------------------------ #
     def _player_attacks(self):
-        """El héroe golpea. Más rápido = más daño (entre 50% y 150% de su ataque)."""
-        ratio = 1.0 - min(1.0, self.challenge_time / self.challenge.time_limit)
-        damage = int(self.player.attack * (0.5 + ratio))
-        damage = max(1, damage)
-        # Los bosses tienen "piel dura": reducen un poco el daño recibido
-        if self.is_boss_fight:
-            damage = max(1, int(damage * 0.85))
+        """El héroe lanza su hechizo: daño FIJO (respuesta correcta)."""
+        damage = config.HERO_DAMAGE
 
         real = self.current_enemy.take_damage(damage)
         points = self.player.register_correct(self.challenge, self.challenge_time)
@@ -118,14 +123,13 @@ class CombatSystem:
         return result
 
     def _enemy_attacks(self, timed_out):
-        """El enemigo contraataca (por error o por tiempo agotado)."""
+        """El enemigo contraataca (por error o por tiempo agotado).
+
+        Daño FIJO igual que el del héroe: así las matemáticas, y no la
+        suerte, deciden cuánto dura el combate.
+        """
         self.player.register_wrong()
-        lo, hi = ((config.BOSS_ATTACK_MIN, config.BOSS_ATTACK_MAX)
-                  if self.is_boss_fight
-                  else (config.ENEMY_ATTACK_MIN, config.ENEMY_ATTACK_MAX))
-        damage = random.randint(lo, hi)
-        if timed_out:
-            damage = max(1, int(damage * config.TIMEOUT_DAMAGE_MULTIPLIER))
+        damage = config.COUNTER_DAMAGE
         real = self.player.take_damage(damage)
 
         result = {

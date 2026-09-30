@@ -31,6 +31,17 @@ def generate(difficulty: int) -> MathChallenge:
     return func(difficulty)
 
 
+def generate_add_sub(difficulty: int) -> MathChallenge:
+    """Solo sumas y restas (Nivel 1: El Bosque de las Sumas)."""
+    return _gen_add_sub(difficulty)
+
+
+def generate_mul_div(difficulty: int) -> MathChallenge:
+    """Multiplicación o división exacta (Nivel 2: La Mina)."""
+    func = random.choice([_gen_multiplication, _gen_division])
+    return func(max(2, difficulty))
+
+
 # ---------------------------------------------------------------------- #
 #  Generadores internos (uno por tipo de operación)
 # ---------------------------------------------------------------------- #

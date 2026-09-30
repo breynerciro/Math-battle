@@ -43,18 +43,18 @@ class VictoryState(BaseState):
         if last_level:
             # ¡Se terminó el juego!
             self.title = "¡VICTORIA TOTAL!"
-            self.subtitle = "Derrotaste al Dragón Supremo. ¡Eres un maestro de las matemáticas!"
+            self.subtitle = "Derrotaste al Archimago del Caos. ¡Eres un maestro de las matemáticas!"
             self.buttons = [
-                Button(cx - 120, 420, 240, 52, "MENÚ PRINCIPAL",
+                Button(cx - 120, 560, 240, 52, "MENÚ PRINCIPAL",
                        on_click=self._go_menu, font_size=config.FONT_SIZE_MEDIUM),
             ]
         else:
             self.title = f"¡NIVEL {level} SUPERADO!"
             self.subtitle = f"Has desbloqueado el nivel {level + 1}"
             self.buttons = [
-                Button(cx - 250, 420, 240, 52, "SIGUIENTE NIVEL",
+                Button(cx - 250, 560, 240, 52, "SIGUIENTE NIVEL",
                        on_click=self._next_level, font_size=config.FONT_SIZE_MEDIUM),
-                Button(cx + 10, 420, 240, 52, "MENÚ",
+                Button(cx + 10, 560, 240, 52, "MENÚ",
                        on_click=self._go_menu, font_size=config.FONT_SIZE_MEDIUM),
             ]
 
@@ -93,11 +93,11 @@ class VictoryState(BaseState):
         # Título con "glow" simple (doble texto)
         cx = config.SCREEN_WIDTH // 2
         self.draw_text(screen, self.title, config.FONT_SIZE_TITLE,
-                       config.BLACK, cx + 4, 114, center=True)
+                       config.BLACK, cx + 4, 134, center=True)
         self.draw_text(screen, self.title, config.FONT_SIZE_TITLE,
-                       config.YELLOW, cx, 110, center=True)
+                       config.YELLOW, cx, 130, center=True)
         # Subtítulo ajustado por píxeles (el de victoria total es largo)
-        y = 168
+        y = 190
         for line in self._wrap(self.subtitle, config.FONT_SIZE_MEDIUM, 760):
             self.draw_text(screen, line, config.FONT_SIZE_MEDIUM,
                            config.WHITE, cx, y, center=True)
@@ -106,7 +106,7 @@ class VictoryState(BaseState):
         # Héroe celebrando
         self.player.play("victory")
         self.player.update(0.016)
-        self.player.draw(screen, cx, 280)
+        self.player.draw(screen, cx, 330)
 
         # Estadísticas de la partida
         accuracy = (100 * self.player.correct_count //
@@ -116,7 +116,7 @@ class VictoryState(BaseState):
             f"Combo máximo: x{self.player.max_combo}",
             f"Precisión: {accuracy}%",
         ]
-        y = 350
+        y = 470
         for line in stats:
             self.draw_text(screen, line, config.FONT_SIZE_MEDIUM,
                            config.WHITE, cx, y, center=True)

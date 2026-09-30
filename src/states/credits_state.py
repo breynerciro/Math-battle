@@ -17,7 +17,7 @@ class CreditsState(BaseState):
     """Créditos del proyecto (editable por los estudiantes)."""
 
     LINES = [
-        ("MATH BATTLE", config.FONT_SIZE_TITLE, config.YELLOW),
+        ("EL HÉROE DE LAS MATEMÁTICAS", config.FONT_SIZE_TITLE, config.YELLOW),
         ("", config.FONT_SIZE_SMALL, config.WHITE),
         ("Ponencia para la Jornada del Educador Matemático (JEM)", config.FONT_SIZE_SMALL, config.WHITE),
         ("Universidad Pedagógica Nacional", config.FONT_SIZE_SMALL, config.WHITE),
@@ -57,7 +57,7 @@ class CreditsState(BaseState):
 
     def render(self, screen):
         screen.fill(config.BLACK)
-        y = 60
+        y = 80
         for text, size, color in self.LINES:
             self.draw_text(screen, text, size, color,
                            config.SCREEN_WIDTH // 2, y, center=True)

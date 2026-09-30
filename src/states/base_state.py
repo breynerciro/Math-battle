@@ -2,7 +2,7 @@
 base_state.py — Clase base de todos los estados del juego
 =========================================================
 
-Math Battle usa una "máquina de estados": en cada momento solo UNA
+El juego usa una "máquina de estados": en cada momento solo UNA
 pantalla está activa (menú, batalla, victoria...). Todas las pantallas
 heredan de esta clase y cumplen el mismo "contrato":
 

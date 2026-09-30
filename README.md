@@ -1,9 +1,10 @@
-# 🎮 Math Battle
+# 🎮 El Héroe de las Matemáticas
 
-**Math Battle** es un videojuego educativo de combate estilo RPG retro
-(pixel art 16-bit) hecho en **Python + Pygame**: enfrentas a monstruos
-resolviendo retos matemáticos. Responder bien = atacar; responder mal =
-recibir un golpe. ¡Estudiar nunca fue tan peligroso!
+**El Héroe de las Matemáticas** es un videojuego educativo de combate
+estilo RPG retro (pixel art 16-bit) hecho en **Python + Pygame**:
+enfrentas a monstruos resolviendo retos de opción múltiple (A, B, C, D).
+Responder bien = hechizo de 25 de daño; responder mal = contraataque de
+15. ¡Estudiar nunca fue tan peligroso!
 
 > 🎓 Proyecto de ponencia para la **Jornada del Educador Matemático (JEM)**
 > — Universidad Pedagógica Nacional. Desarrollado con estudiantes de
@@ -21,11 +22,12 @@ python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 
 # 3. ¡Jugar!
-./venv/bin/python run_game.py
+./venv/bin/python main.py
 ```
 
-En Windows con Git Bash también funciona `./venv/bin/python run_game.py`;
-con CMD/PowerShell usa `venv\Scripts\python run_game.py`.
+En Windows con Git Bash también funciona `./venv/bin/python main.py`;
+con CMD/PowerShell usa `venv\Scripts\python main.py`. El antiguo
+`run_game.py` sigue funcionando como alias.
 
 ---
 
@@ -34,11 +36,9 @@ con CMD/PowerShell usa `venv\Scripts\python run_game.py`.
 | Acción | Control |
 |--------|---------|
 | Moverse por los menús | Mouse (clic) |
-| Escribir la respuesta | Teclado (números, `-`, `/`, `.`) |
-| Enviar respuesta | `Enter` |
-| Borrar | `Backspace` |
-| Limpiar la respuesta | `Esc` (en el campo de texto) |
-| Abandonar la batalla | `Esc` (en la batalla) |
+| Elegir opción de respuesta | Clic en A/B/C/D o teclas `1` `2` `3` `4` |
+| Empezar el turno (ATACAR) | Clic en el botón o `Enter` |
+| Abandonar la batalla | `Esc` |
 
 ---
 
@@ -46,13 +46,17 @@ con CMD/PowerShell usa `venv\Scripts\python run_game.py`.
 
 - **5 niveles temáticos**, cada uno con un tema matemático distinto:
 
-| Nivel | Nombre | Tema | Enemigos | Boss |
-|-------|--------|------|----------|------|
-| 1 | Bosque Aritmético | Operaciones básicas | Slime, Goblin | Dragón Básico |
-| 2 | Cueva de Ecuaciones | Ecuaciones lineales | Esqueleto, Bruja | Gólem de Piedra |
-| 3 | Torre de Potencias | Potencias y raíces | Fantasma, Demonio | Fénix |
-| 4 | Pantano de Fracciones | Fracciones | Caballero Oscuro, Mago | Hidra de 3 Cabezas |
-| 5 | Fortaleza Geométrica | Geometría | Sombra, Archimago | Dragón Supremo |
+| Nivel | Nombre | Tema | Enemigos | Boss (HP) |
+|-------|--------|------|----------|-----------|
+| 1 | El Bosque de las Sumas | Sumas y restas | Goblin, Esqueleto | Slime Matemático (40) |
+| 2 | La Mina de la Multiplicación | ×, ÷ y problemas de lógica | Bruja, Fantasma | Duende Calculador (80) |
+| 3 | El Templo de las Fracciones | Fracciones | Demonio Menor, Fénix | Golem de Piedra Rúnica (120) |
+| 4 | El Puente Hacia el Caos | Geometría y ecuaciones | Caballero Oscuro, Hidra | Maestro de la Geometría (180) |
+| 5 | El Castillo del Caos | Álgebra | Sombra, Dragón Supremo | Archimago del Caos (250) |
+
+- **Combate por turnos de opción múltiple**: cada turno se plantea una
+  pregunta con 4 opciones; acertar hace **25 de daño** al enemigo y
+  fallar (o agotar el tiempo) recibe **15 de daño**.
 
 - **3 vidas** por partida. Si el héroe cae, se reintenta el nivel.
 - **Puntos** por acertar: bonus por **velocidad** y por **combo**
@@ -67,7 +71,8 @@ con CMD/PowerShell usa `venv\Scripts\python run_game.py`.
 
 ```
 Math-battle/
-├── run_game.py              ← PUNTO DE ENTRADA (ejecuta esto)
+├── main.py                 ← PUNTO DE ENTRADA (ejecuta esto)
+├── run_game.py             ← alias histórico de main.py
 ├── requirements.txt         ← dependencias (pygame)
 ├── save_data.json           ← tu progreso (se crea solo)
 ├── src/
@@ -85,8 +90,14 @@ Math-battle/
 │   ├── fonts/               ← fuente pixel art
 │   └── sounds/              ← sonidos generados (1ª ejecución)
 ├── tools/
-│   ├── sprite_data.py       ← datos fuente del pixel art (cuadrículas)
-│   └── generate_sprites.py  ← regenera los PNG de assets/
+│   ├── pixel.py             ← lienzo de píxel y escalado (Pillow)
+│   ├── palettes.py          ← paletas con hue shift y contornos fríos
+│   ├── art_hero.py          ← dibujo del héroe (4 animaciones)
+│   ├── art_enemies.py       ← dibujo de los 16 enemigos
+│   ├── art_backgrounds.py   ← dibujo de los 5 fondos de batalla
+│   ├── art_effects.py       ← dibujo de efectos (estrellas)
+│   ├── generate_art.py      ← fuente de verdad: escribe y verifica assets/
+│   └── generate_sprites.py  ← el comando de siempre (delega en generate_art)
 └── tests/                   ← tests automáticos (pytest)
 ```
 
@@ -103,6 +114,8 @@ Los tests verifican que:
   (¡incluso resolviendo las ecuaciones!),
 - las fracciones aceptan respuestas tipo `11/12`,
 - la lógica de combate (daño, combos, timeout) funciona,
+- el arte de `assets/` está sincronizado con su generador
+  (rutas, tamaños y frames),
 - el juego completo arranca y corre frames sin crashear.
 
 ---
@@ -125,40 +138,39 @@ assets/sprites/hero/attack/frame1.png           ← tu héroe atacando
 assets/backgrounds/level1.png                   ← tu bosque (960×540)
 ```
 
-**Opción B — Edita las cuadrículas de letras** (sin programa de dibujo):
-abre `tools/sprite_data.py`. Cada **letra** es un píxel de color de la
-paleta y cada punto `.` es transparencia:
+**Opción B — Edita el dibujo en código** (sin programa de dibujo):
+el arte vive en `tools/art_*.py`, escrito con Pillow. Cada personaje es
+una función que pinta sobre un lienzo lógico de 32×32 con los colores de
+`tools/palettes.py`:
 
 ```python
-SLIME_SPRITES = {
-    "idle": [
-        [
-            "....GGGG....",   # G = verde
-            "..GGGGGGGG..",
-            ".GGWGGGGWGG.",   # W = blanco (ojos)
-            ".GGKGGGGKGG.",   # K = negro (pupila)
-            "GGGGGGGGGGGG",
-        ],
-    ],
-}
+def slime(phase: int = 0) -> Canvas:
+    c = Canvas(32, 32)
+    c.fill_rect(6, 16, 20, 10, GREEN)   # cuerpo
+    c.put(11, 19, WHITE)                # ojo
+    ...
+    return c
 ```
 
 Y regeneras todos los PNG con:
 
 ```bash
-./venv/bin/python tools/generate_sprites.py
+./venv/bin/python tools/generate_sprites.py      # genera y verifica
+./venv/bin/python tools/generate_art.py --verify  # solo comprueba
 ```
 
-> **Nota:** el héroe y los 5 bosses (Dragón Básico, Gólem de Piedra,
-> Fénix, Hidra y Dragón Supremo) viven en `tools/custom_art.py`, que
-> tiene **prioridad** sobre `sprite_data.py`. Edítalos ahí. Puedes
-> validar las cuadrículas con `./venv/bin/python tools/validate_art.py`
-> (agrega `--preview` para ver la silueta en ASCII).
+> **Nota:** `tools/generate_art.py` es la única fuente de verdad: escribe
+> exactamente las rutas y el número de frames que espera el juego, así
+> que **los PNG de `assets/` no se editan a mano**. Si hay que cambiar un
+> dibujo, se cambia aquí y se vuelve a generar. `tests/test_assets.py`
+> avisa si falta un archivo o si el arte quedó desincronizado.
 
 ### 2. Crea un enemigo nuevo
 
-1. Crea sus sprites en `assets/sprites/enemies/<nombre>/` con las
-   carpetas `idle/` y `hurt/` (frames `frame0.png`, ...).
+1. Dibuja sus frames en `tools/art_enemies.py` y regístralo en el
+   diccionario `ENEMIES` de `tools/generate_art.py` (o coloca a mano
+   sus PNG en `assets/sprites/enemies/<nombre>/` con las carpetas
+   `idle/` y `hurt/`, frames `frame0.png`, ...).
 2. Copia una clase de `src/entities/enemies/`, cambia el nombre y las
    estadísticas (`hp`, `attack`). El nombre de la clase en snake_case
    es el nombre de carpeta del sprite (`DarkKnight` → `dark_knight`;
@@ -181,11 +193,15 @@ para garantizar que el resultado siempre sea bonito. ¡Copia el patrón!
 
 ## 🎨 Notas técnicas
 
-- **Resolución**: 960×540 (escala 2× de 480×270 para pixel art nítido).
+- **Resolución**: 1280×720 (16:9). Los personajes se dibujan con escala
+  entera (32×32 → ×5 = 160×160, vecino más próximo) y los fondos se
+  generan a 480×270 → ×2 y se reescalan al cargarlos.
 - **Sprites y fondos**: imágenes PNG en `assets/`. Se generan con
-  `tools/generate_sprites.py` (a partir de cuadrículas de letras en
-  `tools/sprite_data.py`) y se pueden reemplazar por pixel art propio
-  sin tocar el código del juego.
+  Pillow desde `tools/art_*.py` (`tools/generate_art.py` los escribe y
+  verifica) y se pueden reemplazar por pixel art propio sin tocar el
+  código del juego. Escala entera con `Image.NEAREST`: los personajes
+  32×32 → ×5 (160×160), los fondos 480×270 → ×2 (960×540) y se
+  reescalan a 1280×720 al cargarlos.
 - **Sonidos y música**: se generan matemáticamente (ondas senoidales) y
   se guardan como `.wav` en `assets/sounds/` la primera vez que se
   ejecuta el juego.

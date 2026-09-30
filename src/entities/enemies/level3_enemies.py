@@ -1,31 +1,33 @@
 """
-level3_enemies.py — Torre de Potencias (Nivel 3)
-================================================
+level3_enemies.py — El Templo de las Fracciones (Nivel 3)
+=========================================================
 
-Tema matemático: potencias y raíces
-Enemigos: Fantasma → Demonio Menor → Boss: Fénix
+Tema matemático: operaciones con fracciones
+Enemigos: Demonio Menor → Fénix → BOSS: Golem de Piedra Rúnica (HP 120)
 """
 
 from ...math_engine.challenge import MathTopic
 from ..enemy import Enemy
 
 
-class Ghost(Enemy):
-    def __init__(self) -> None:
-        super().__init__("Fantasma", hp=110, attack=20,
-                         math_topic=MathTopic.POWERS_ROOTS, difficulty=3)
-
-
 class LesserDemon(Enemy):
     def __init__(self) -> None:
-        super().__init__("Demonio Menor", hp=130, attack=22,
-                         math_topic=MathTopic.POWERS_ROOTS, difficulty=4)
+        super().__init__("Demonio Menor", hp=80, attack=20,
+                         math_topic=MathTopic.FRACCIONES, difficulty=3)
 
 
 class Phoenix(Enemy):
-    """BOSS del nivel 3."""
+    def __init__(self) -> None:
+        super().__init__("Fénix", hp=95, attack=24,
+                         math_topic=MathTopic.FRACCIONES, difficulty=3)
+
+
+class GolemRunico(Enemy):
+    """BOSS del nivel 3: el Golem de Piedra Rúnica (HP 120)."""
+
+    SPRITE_NAME = "stone_golem"
 
     def __init__(self) -> None:
-        super().__init__("Fénix", hp=220, attack=32,
-                         math_topic=MathTopic.POWERS_ROOTS, difficulty=5,
+        super().__init__("Golem de Piedra Rúnica", hp=120, attack=30,
+                         math_topic=MathTopic.FRACCIONES, difficulty=4,
                          is_boss=True)

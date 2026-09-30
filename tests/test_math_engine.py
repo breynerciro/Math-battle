@@ -42,13 +42,33 @@ def test_generator_produces_all_topics(generator):
 
 
 def test_generate_for_level_uses_level_topic(generator):
-    """generate_for_level(3) debe producir retos de potencias (nivel 3)."""
+    """generate_for_level(3) debe producir retos de fracciones (nivel 3)."""
     for _ in range(30):
         challenge = generator.generate_for_level(3)
         assert challenge.difficulty == 3
     # La dificultad se acota al rango 1..5
     challenge = generator.generate_for_level(1, difficulty=99)
     assert challenge.difficulty == 5
+
+
+def test_every_challenge_has_four_options(generator):
+    """Todo reto es opción múltiple: 4 alternativas únicas y una correcta."""
+    for topic in MathTopic:
+        for _ in range(30):
+            c = generator.generate(topic, 3)
+            assert len(c.options) == 4, c.question
+            assert len(set(c.options)) == 4, f"opciones repetidas: {c.options}"
+            # La opción marcada es exactamente la respuesta del reto
+            assert c.correct_option() == (c.answer_display or str(c.answer))
+            assert c.check_option(c.correct_index) is True
+            assert c.check_option((c.correct_index + 1) % 4) is False
+
+
+def test_options_position_is_shuffled(generator):
+    """La correcta no siempre está en la misma posición (A/B/C/D)."""
+    positions = {generator.generate(MathTopic.SUMAS, 1).correct_index
+                 for _ in range(60)}
+    assert len(positions) > 1, "la respuesta siempre cae en la misma letra"
 
 
 # ---------------------------------------------------------------------- #
@@ -72,7 +92,7 @@ def test_operations_combined_respects_order():
 
 
 # ---------------------------------------------------------------------- #
-#  Ecuaciones (nivel 2): la respuesta DEBE verificar la ecuación
+#  Ecuaciones (niveles 4 y 5): la respuesta DEBE verificar la ecuación
 # ---------------------------------------------------------------------- #
 def _verify_equation(question, x):
     """Reconstruye la ecuación del texto y verifica que x la satisface."""
@@ -103,7 +123,7 @@ def test_equations_answers_are_correct(difficulty):
 
 
 # ---------------------------------------------------------------------- #
-#  Potencias y raíces (nivel 3)
+#  Potencias y raíces (reserva fuera del ciclo de niveles)
 # ---------------------------------------------------------------------- #
 def test_roots_are_exact():
     """La raíz cuadrada de N debe dar entero y N debe ser el cuadrado de la respuesta."""
@@ -115,16 +135,22 @@ def test_roots_are_exact():
 
 
 # ---------------------------------------------------------------------- #
-#  Fracciones (nivel 4): respuesta en formato a/b y verificable
+#  Fracciones (nivel 3): respuesta en formato a/b y verificable
 # ---------------------------------------------------------------------- #
 def test_fractions_answer_matches_question():
-    """El resultado mostrado (a/b) debe ser la respuesta real simplificada."""
+    """El resultado mostrado debe ser la respuesta real simplificada.
+
+    Si el resultado es entero se muestra como "6" (no como "6/1");
+    si no, en formato a/b.
+    """
     for _ in range(50):
         c = fractions.generate(3)
-        assert "/" in c.answer_display
-        num, den = c.answer_display.split("/")
-        assert Fraction(int(num), int(den)) == c.answer
         assert c.answer.denominator >= 1
+        if "/" in c.answer_display:
+            num, den = c.answer_display.split("/")
+            assert Fraction(int(num), int(den)) == c.answer
+        else:
+            assert int(c.answer_display) == c.answer
 
 
 def test_fraction_check_accepts_slash_format():
@@ -139,7 +165,7 @@ def test_fraction_check_accepts_slash_format():
 
 
 # ---------------------------------------------------------------------- #
-#  Geometría (nivel 5): respuestas positivas y con unidades
+#  Geometría (nivel 4): respuestas positivas y con unidades
 # ---------------------------------------------------------------------- #
 def test_geometry_answers_positive_with_units():
     for _ in range(50):

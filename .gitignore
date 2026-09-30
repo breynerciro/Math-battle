@@ -1,7 +1,5 @@
 # Entorno virtual
 .agents/
-.claude/i
-tools/
 venv/
 .venv/
 
@@ -16,3 +14,4 @@ save_data.json
 
 # Archivos temporales de audio generados
 assets/sounds/**/*.tmp
+prompt_de_desarrollo_de_videojuego.md

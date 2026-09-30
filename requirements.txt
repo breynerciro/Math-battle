@@ -1,2 +1,4 @@
 pygame-ce>=2.5.0
 pytest>=8.0
+# Solo para el generador de arte (tools/). El juego en sí no lo importa.
+pillow>=10.0

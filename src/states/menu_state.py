@@ -27,11 +27,11 @@ class MenuState(BaseState):
 
         center_x = config.SCREEN_WIDTH // 2
         self.buttons = [
-            Button(center_x - 120, 300, 240, 52, "JUGAR",
+            Button(center_x - 120, 340, 240, 52, "JUGAR",
                    on_click=self._start_game, font_size=config.FONT_SIZE_LARGE),
-            Button(center_x - 120, 370, 240, 52, "CRÉDITOS",
+            Button(center_x - 120, 410, 240, 52, "CRÉDITOS",
                    on_click=self._go_credits, font_size=config.FONT_SIZE_LARGE),
-            Button(center_x - 120, 440, 240, 52, "SALIR",
+            Button(center_x - 120, 480, 240, 52, "SALIR",
                    on_click=self.game.quit, font_size=config.FONT_SIZE_LARGE),
         ]
 
@@ -91,27 +91,28 @@ class MenuState(BaseState):
                            s["x"], s["y"])
 
         # Título con sombra
-        self.draw_text(screen, "MATH BATTLE", config.FONT_SIZE_TITLE,
-                       config.BLACK, config.SCREEN_WIDTH // 2 + 4, 84,
+        title = "EL HÉROE DE LAS MATEMÁTICAS"
+        self.draw_text(screen, title, config.FONT_SIZE_TITLE,
+                       config.BLACK, config.SCREEN_WIDTH // 2 + 4, 114,
                        center=True)
-        self.draw_text(screen, "MATH BATTLE", config.FONT_SIZE_TITLE,
-                       config.YELLOW, config.SCREEN_WIDTH // 2, 80, center=True)
+        self.draw_text(screen, title, config.FONT_SIZE_TITLE,
+                       config.YELLOW, config.SCREEN_WIDTH // 2, 110, center=True)
         self.draw_text(screen, "¡Combate por turnos con matemáticas!",
                        config.FONT_SIZE_MEDIUM, config.LIGHT_GRAY,
-                       config.SCREEN_WIDTH // 2, 140, center=True)
+                       config.SCREEN_WIDTH // 2, 172, center=True)
 
         # Héroe animado al lado del título
         if self.game.player is None:
             from ..entities.player import Player
             self.game.player = Player()
         self.game.player.update(0.016)
-        self.game.player.draw(screen, 150, 360)
+        self.game.player.draw(screen, 200, 440)
 
         # Récord guardado
         high = self.save_data.get("high_score", 0)
         if high > 0:
             self.draw_text(screen, f"Récord: {high} pts", config.FONT_SIZE_SMALL,
-                           config.YELLOW, config.SCREEN_WIDTH // 2, 505,
+                           config.YELLOW, config.SCREEN_WIDTH // 2, 600,
                            center=True)
 
         for button in self.buttons:

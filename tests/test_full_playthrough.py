@@ -2,12 +2,12 @@
 test_full_playthrough.py — Partida completa simulada
 ====================================================
 
-Juega un nivel ENTERO automáticamente: abre retos, responde usando la
-respuesta real del motor matemático y verifica que se llega a la
-pantalla de victoria. Es el "playtest automático" del plan.
+Juega un nivel ENTERO automáticamente: abre retos con ATACAR, responde
+eligiendo la opción correcta (o una equivocada) dentro de la propia
+pantalla de combate y verifica que se llega a la victoria o a GAME OVER.
 
-También verifica el camino triste: responder siempre mal termina en
-GAME OVER después de gastar las 3 vidas.
+Es el "playtest automático" del diseño: los 5 niveles completables
+respondiendo bien, y las 3 vidas perdidas respondiendo siempre mal.
 """
 
 import os
@@ -18,8 +18,6 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-
-WRONG_ANSWER = "-999"    # ninguna respuesta del juego es negativa
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +30,18 @@ def isolate_save(tmp_path):
     config.SAVE_FILE = original
 
 
+def _step_battle(battle, answer_mode):
+    """Un paso de la partida dentro de la pantalla de combate."""
+    if battle.question_active:
+        wrong = (battle.challenge.correct_index + 1) % 4
+        battle._choose_option(battle.challenge.correct_index
+                              if answer_mode == "correct" else wrong)
+    elif battle.can_attack and not battle.transition.active():
+        battle._open_challenge()
+    else:
+        battle.update(0.2)          # acelerar animaciones/esperas
+
+
 def _play_level(level: int, answer_mode: str, max_turns=5000):
     """Juega un nivel completo.
 
@@ -42,7 +52,6 @@ def _play_level(level: int, answer_mode: str, max_turns=5000):
     """
     from src.game import Game
     from src.states.battle_state import BattleState
-    from src.states.math_challenge_state import MathChallengeState
     from src.states.victory_state import VictoryState
     from src.states.defeat_state import DefeatState
 
@@ -56,17 +65,7 @@ def _play_level(level: int, answer_mode: str, max_turns=5000):
             return state
 
         if isinstance(state, BattleState):
-            if state.can_attack and not state.transition.active():
-                state._open_challenge()
-            else:
-                state.update(0.2)          # acelerar animaciones/esperas
-        elif isinstance(state, MathChallengeState):
-            if not state.showing_feedback:
-                answer = (str(state.challenge.answer) if answer_mode == "correct"
-                          else WRONG_ANSWER)
-                state._on_submit(answer)
-            else:
-                state.update(0.5)          # acelerar el mensaje de feedback
+            _step_battle(state, answer_mode)
         else:
             pytest.fail(f"Estado inesperado: {type(state).__name__}")
 
@@ -76,7 +75,6 @@ def _play_level(level: int, answer_mode: str, max_turns=5000):
 def test_win_every_level_answering_correctly():
     """Respondiendo bien SE DEBE poder completar cada uno de los 5 niveles."""
     from src.states.victory_state import VictoryState
-    from src.states.battle_state import BattleState
 
     for level in range(1, 6):
         final = _play_level(level, "correct")
@@ -88,36 +86,24 @@ def test_win_every_level_answering_correctly():
 
 def test_lose_game_answering_wrong():
     """Respondiendo siempre mal se pierden las 3 vidas → GAME OVER."""
-    from src.states.defeat_state import DefeatState
     from src.game import Game
     from src.states.battle_state import BattleState
-    from src.states.math_challenge_state import MathChallengeState
+    from src.states.defeat_state import DefeatState
 
     game = Game()
     game.change_state(BattleState(game, 1))
 
-    from src.states.victory_state import VictoryState
-    from src.states.defeat_state import DefeatState as Defeat
-
     state = None
     for turn in range(5000):
         state = game.current_state()
-        if isinstance(state, Defeat):
+        if isinstance(state, DefeatState):
             break
         if isinstance(state, BattleState):
-            if state.can_attack and not state.transition.active():
-                state._open_challenge()
-            else:
-                state.update(0.2)
-        elif isinstance(state, MathChallengeState):
-            if not state.showing_feedback:
-                state._on_submit(WRONG_ANSWER)
-            else:
-                state.update(0.5)
+            _step_battle(state, "wrong")
     else:
         pytest.fail("La partida no terminó en derrota")
 
-    assert isinstance(state, Defeat)
+    assert isinstance(state, DefeatState)
     assert game.player.lives <= 0
 
 
@@ -125,7 +111,6 @@ def test_retry_keeps_score_but_heals():
     """Tras perder una vida, el reintento cura al héroe y conserva puntos."""
     from src.game import Game
     from src.states.battle_state import BattleState
-    from src.states.math_challenge_state import MathChallengeState
 
     game = Game()
     game.change_state(BattleState(game, 1))
@@ -136,15 +121,7 @@ def test_retry_keeps_score_but_heals():
         if isinstance(state, BattleState) and game.player.lives < 3:
             break        # ya hubo un reintento
         if isinstance(state, BattleState):
-            if state.can_attack and not state.transition.active():
-                state._open_challenge()
-            else:
-                state.update(0.2)
-        elif isinstance(state, MathChallengeState):
-            if not state.showing_feedback:
-                state._on_submit("-999")
-            else:
-                state.update(0.5)
+            _step_battle(state, "wrong")
     else:
         pytest.fail("No se llegó al reintento")
 

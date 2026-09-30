@@ -42,7 +42,6 @@ def test_import_all_modules():
     from src.ui.animated_sprite import AnimatedSprite        # noqa: F401
     from src.ui.background import get_background             # noqa: F401
     from src.ui.hud import HUD                               # noqa: F401
-    from src.ui.text_input import TextInput                  # noqa: F401
     from src.ui.button import Button                         # noqa: F401
     from src.ui.transition import Transition                 # noqa: F401
 
@@ -141,10 +140,10 @@ def test_record_result_unlocks_next_level(tmp_path):
 
 
 def test_battle_flow_full_turn(pygame_init):
-    """Flujo completo: batalla → pregunta → respuesta correcta → daño."""
+    """Flujo completo en UNA pantalla: ATACAR → 4 opciones → daño."""
+    from src import config
     from src.game import Game
     from src.states.battle_state import BattleState
-    from src.states.math_challenge_state import MathChallengeState
 
     game = Game()
     game.change_state(BattleState(game, 1))
@@ -152,18 +151,42 @@ def test_battle_flow_full_turn(pygame_init):
     enemy = battle.current_enemy
     hp_before = enemy.hp
 
-    # Abrir el reto (push) y responder correctamente
+    # ATACAR plantea la pregunta DENTRO de la propia batalla
     battle._open_challenge()
-    challenge_state = game.current_state()
-    assert isinstance(challenge_state, MathChallengeState)
-    challenge_state.challenge_time = 1.0     # respuesta rápida
-    challenge_state._on_submit(str(challenge_state.challenge.answer))
+    assert game.current_state() is battle       # no se apila ningún estado
+    assert battle.question_active is True
+    assert len(battle.challenge.options) == 4   # A, B, C, D
 
-    # El feedback debe mostrarse y luego cerrarse
-    assert challenge_state.showing_feedback is True
-    challenge_state.update(2.0)              # espera mayor al timer de feedback
+    # Responder rápido eligiendo la opción correcta
+    battle.combat.challenge_time = 1.0
+    battle._choose_option(battle.challenge.correct_index)
 
-    # De vuelta en batalla, el enemigo recibió daño
-    assert game.current_state() is battle
-    assert enemy.hp < hp_before
+    assert battle.question_active is False
+    assert battle.feedback == f"CORRECT: MAGIC {config.HERO_DAMAGE} DMG"
+
+    # Tras la animación del turno, el enemigo perdió exactamente 25 HP
+    battle.update(2.0)
+    assert enemy.hp == hp_before - config.HERO_DAMAGE
+    game.quit()
+
+
+def test_wrong_option_counterattacks(pygame_init):
+    """Elegir la opción equivocada hace perder 15 HP al héroe."""
+    from src import config
+    from src.game import Game
+    from src.states.battle_state import BattleState
+
+    game = Game()
+    game.change_state(BattleState(game, 1))
+    battle = game.current_state()
+    player = game.player
+    hp_before = player.hp
+
+    battle._open_challenge()
+    wrong = (battle.challenge.correct_index + 1) % 4
+    battle._choose_option(wrong)
+
+    assert battle.feedback == f"INCORRECT: MAGIC {config.COUNTER_DAMAGE} DMG"
+    battle.update(2.0)
+    assert player.hp == hp_before - config.COUNTER_DAMAGE
     game.quit()

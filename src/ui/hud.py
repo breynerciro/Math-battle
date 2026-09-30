@@ -12,10 +12,10 @@ import pygame
 from .. import config
 
 # Posiciones de los paneles (esquinas superiores)
-BAR_W = 220
-BAR_H = 18
-HERO_PANEL = (16, 52)          # esquina superior izquierda
-ENEMY_PANEL = (config.SCREEN_WIDTH - 16 - BAR_W, 52)   # arriba a la derecha
+BAR_W = 280
+BAR_H = 22
+HERO_PANEL = (24, 64)          # esquina superior izquierda
+ENEMY_PANEL = (config.SCREEN_WIDTH - 24 - BAR_W, 64)   # arriba a la derecha
 
 
 class HUD:
@@ -104,4 +104,4 @@ class HUD:
         if player.combo >= 2 and (pygame.time.get_ticks() // 300) % 2 == 0:
             surface = font_small.render(f"COMBO x{player.combo}!", True,
                                         config.ORANGE)
-            screen.blit(surface, (16, 94))
+            screen.blit(surface, (24, 116))

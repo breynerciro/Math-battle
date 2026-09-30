@@ -16,18 +16,18 @@ from .base_state import BaseState
 from .battle_state import BattleState
 
 LEVEL_INFO = {
-    1: ("Bosque Aritmético", "+, -, ×, ÷"),
-    2: ("Cueva de Ecuaciones", "ax + b = c"),
-    3: ("Torre de Potencias", "potencias y raíces"),
-    4: ("Pantano de Fracciones", "½ + ¼ ..."),
-    5: ("Fortaleza Geométrica", "áreas y ángulos"),
+    1: ("El Bosque de las Sumas", "sumas y restas"),
+    2: ("La Mina de la Multiplicación", "multiplicación y división"),
+    3: ("El Templo de las Fracciones", "operaciones con fracciones"),
+    4: ("El Puente Hacia el Caos", "geometría y ecuaciones"),
+    5: ("El Castillo del Caos", "álgebra"),
 }
 
 LEVEL_ICONS = {
     1: "🌳",
-    2: "🕳️",
-    3: "🗼",
-    4: "🌿",
+    2: "⛏️",
+    3: "🏛️",
+    4: "🌉",
     5: "🏰",
 }
 
@@ -95,7 +95,7 @@ class LevelSelectState(BaseState):
         for row_idx, levels in enumerate(rows):
             total_w = len(levels) * self.CARD_W + (len(levels) - 1) * self.GAP
             x = (config.SCREEN_WIDTH - total_w) // 2
-            y = 118 + row_idx * (self.CARD_H + self.GAP)
+            y = 150 + row_idx * (self.CARD_H + self.GAP)
             for level in levels:
                 rect = pygame.Rect(x, y, self.CARD_W, self.CARD_H)
                 card = LevelCard(level, rect, level <= self.highest)
@@ -148,12 +148,12 @@ class LevelSelectState(BaseState):
         self._render_background(screen)
 
         self.draw_text(screen, "SELECCIONA NIVEL", config.FONT_SIZE_LARGE,
-                       config.YELLOW, config.SCREEN_WIDTH // 2, 52, center=True)
+                       config.YELLOW, config.SCREEN_WIDTH // 2, 62, center=True)
         self.draw_text(screen,
                        f"Récord: {self.save_data.get('high_score', 0)} pts   •   "
                        f"Progreso: nivel {self.highest}",
                        config.FONT_SIZE_SMALL, config.LIGHT_GRAY,
-                       config.SCREEN_WIDTH // 2, 92, center=True)
+                       config.SCREEN_WIDTH // 2, 104, center=True)
 
         for card in self.cards:
             self._render_card(screen, card)

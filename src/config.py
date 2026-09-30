@@ -1,5 +1,5 @@
 """
-config.py — Constantes globales de Math Battle
+config.py — Constantes globales de El Héroe de las Matemáticas
 ================================================
 
 Aquí vive TODO lo que se puede ajustar "girando una perilla":
@@ -25,19 +25,46 @@ SAVE_FILE = os.path.join(BASE_DIR, "save_data.json")
 # ---------------------------------------------------------------------------
 # Ventana y tiempo
 # ---------------------------------------------------------------------------
-# 960x540 = doble de 480x270. Trabajamos "a escala 2x" para que el pixel art
-# se vea grande y nítido sin inventar detalles de más.
-SCREEN_WIDTH = 960
-SCREEN_HEIGHT = 540
+# 1280x720 (16:9), la resolución que pide el diseño del juego. El pixel art
+# se dibuja con escala ENTERA (personajes 32x32 → x5 = 160x160) y los fondos
+# 480x270 se reescalan a pantalla al cargarlos (ver ui/background.py).
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 FPS = 60
-TITLE = "Math Battle"
-GROUND_Y = 400    # línea del suelo en la batalla (los pies de los personajes)
+TITLE = "El Héroe de las Matemáticas"
+GROUND_Y = 418    # línea del suelo en la batalla (los pies de los personajes)
+
+# ---------------------------------------------------------------------------
+# Layout del combate (sección inferior = panel de acción RPG)
+# ---------------------------------------------------------------------------
+# El prompt divide la pantalla en dos: arriba escenario/personajes,
+# abajo el panel con la pregunta, las 4 opciones y los botones de menú.
+PANEL_X = 16
+PANEL_Y = 436
+PANEL_W = SCREEN_WIDTH - 2 * PANEL_X      # 1248
+PANEL_H = 268                              # 436 + 268 = 704 (margen 16 abajo)
+
+# Zona izquierda del panel: pregunta + opciones (A, B, C, D)
+QUESTION_X = PANEL_X + 20                  # 36
+QUESTION_W = 740
+OPTIONS_Y = 540                            # primera fila de opciones
+OPTION_W = 364
+OPTION_H = 60
+OPTION_GAP = 12
+
+# Zona derecha del panel: botones de menú clásico + feedback
+MENU_X = 800
+MENU_W = SCREEN_WIDTH - PANEL_X - 20 - MENU_X   # 444
+MENU_Y = 452
+MENU_BTN_H = 44
+MENU_BTN_GAP = 8
+FEEDBACK_RECT = (MENU_X, 664, MENU_W, 32)  # esquina inferior derecha
 
 # Nombres de archivo de fuentes (si existen en assets/fonts/ se usan)
 FONT_PIXEL_NAME = "PressStart2P.ttf"   # Descargable de Google Fonts
 FONT_FALLBACK = None                    # pygame usa la fuente por defecto
 
-# Tamaños de fuente (en la fuente pixel, 16 px ya se lee bien a 960px)
+# Tamaños de fuente (en la fuente pixel, 16 px ya se lee bien a 1280px)
 FONT_SIZE_SMALL = 12
 FONT_SIZE_MEDIUM = 16
 FONT_SIZE_LARGE = 24
@@ -65,18 +92,18 @@ BROWN = (150, 100, 60)
 
 # Colores por nivel (se usan para fondos y acentos)
 LEVEL_COLORS = {
-    1: (34, 100, 34),    # Bosque: verde
-    2: (40, 40, 70),     # Cueva: azul oscuro
-    3: (120, 60, 140),   # Torre: púrpura
-    4: (50, 90, 40),     # Pantano: verde pálido
-    5: (90, 40, 40),     # Fortaleza: rojo oscuro
+    1: (34, 100, 34),    # Bosque de las Sumas: verde
+    2: (150, 110, 40),   # Mina de la Multiplicación: dorado
+    3: (60, 100, 170),   # Templo de las Fracciones: azul ruina
+    4: (70, 60, 130),    # Puente Hacia el Caos: índigo
+    5: (130, 50, 60),    # Castillo del Caos: rojo oscuro
 }
 
 # ---------------------------------------------------------------------------
 # Jugador
 # ---------------------------------------------------------------------------
 PLAYER_MAX_HP = 100
-PLAYER_ATTACK = 15
+PLAYER_ATTACK = 15        # (referencia estadística; el daño lo fija HERO_DAMAGE)
 PLAYER_DEFENSE = 5
 PLAYER_LIVES = 3
 HEAL_BETWEEN_ENEMIES = 25     # HP que recupera el jugador al vencer un enemigo
@@ -85,20 +112,21 @@ MAX_COMBO = 10                # Combo máximo que se cuenta para el bonus
 # ---------------------------------------------------------------------------
 # Enemigos y combate
 # ---------------------------------------------------------------------------
-ENEMY_ATTACK_MIN = 10         # Daño mínimo de enemigos normales
-ENEMY_ATTACK_MAX = 30
-BOSS_ATTACK_MIN = 20          # Daño de los bosses
-BOSS_ATTACK_MAX = 50
-TIMEOUT_DAMAGE_MULTIPLIER = 0.5  # Si se agota el tiempo, el golpe duele la mitad
+# Daño FIJO del duelo (lo define el diseño del juego):
+#   respuesta correcta → el héroe lanza el hechizo: enemigo -25 HP
+#   respuesta incorrecta → el enemigo contraataca: héroe -15 HP
+HERO_DAMAGE = 25
+COUNTER_DAMAGE = 15
 
 # ---------------------------------------------------------------------------
 # Retos matemáticos (timers en segundos)
 # ---------------------------------------------------------------------------
-TIME_LIMIT_BASE = 30          # Nivel 1: operaciones
-TIME_LIMIT_EQUATIONS = 45     # Nivel 2: ecuaciones
-TIME_LIMIT_POWERS = 45        # Nivel 3: potencias y raíces
-TIME_LIMIT_FRACTIONS = 60     # Nivel 4: fracciones
-TIME_LIMIT_GEOMETRY = 60      # Nivel 5: geometría
+TIME_LIMIT_BASE = 30          # Nivel 1: sumas y restas
+TIME_LIMIT_EQUATIONS = 45     # Nivel 4/5: ecuaciones y álgebra
+TIME_LIMIT_POWERS = 45        # (reserva: potencias y raíces)
+TIME_LIMIT_FRACTIONS = 60     # Nivel 3: fracciones
+TIME_LIMIT_GEOMETRY = 60      # Nivel 4: geometría
+TIME_LIMIT_WORD_PROBLEMS = 40 # Nivel 2: problemas de lógica
 
 # Puntos base por respuesta correcta (se suman bonus por velocidad y combo)
 POINTS_BASE = 100

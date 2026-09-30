@@ -1,9 +1,10 @@
 """
-level4_enemies.py — Pantano de Fracciones (Nivel 4)
-===================================================
+level4_enemies.py — El Puente Hacia el Caos (Nivel 4)
+======================================================
 
-Tema matemático: fracciones
-Enemigos: Caballero Oscuro → Mago → Boss: Hidra de 3 Cabezas
+Tema matemático: geometría básica (perímetros, áreas) y ecuaciones
+de primer grado (x − 15 = 30)
+Enemigos: Caballero Oscuro → Hidra → BOSS: Maestro de la Geometría (HP 180)
 """
 
 from ...math_engine.challenge import MathTopic
@@ -12,20 +13,22 @@ from ..enemy import Enemy
 
 class DarkKnight(Enemy):
     def __init__(self) -> None:
-        super().__init__("Caballero Oscuro", hp=150, attack=24,
-                         math_topic=MathTopic.FRACTIONS, difficulty=4)
-
-
-class Mage(Enemy):
-    def __init__(self) -> None:
-        super().__init__("Mago", hp=140, attack=26,
-                         math_topic=MathTopic.FRACTIONS, difficulty=5)
+        super().__init__("Caballero Oscuro", hp=115, attack=24,
+                         math_topic=MathTopic.GEOMETRIA, difficulty=3)
 
 
 class Hydra(Enemy):
-    """BOSS del nivel 4."""
+    def __init__(self) -> None:
+        super().__init__("Hidra", hp=140, attack=28,
+                         math_topic=MathTopic.GEOMETRIA, difficulty=3)
+
+
+class MaestroGeometria(Enemy):
+    """BOSS del nivel 4: el Maestro de la Geometría (HP 180)."""
+
+    SPRITE_NAME = "mage"
 
     def __init__(self) -> None:
-        super().__init__("Hidra de 3 Cabezas", hp=280, attack=36,
-                         math_topic=MathTopic.FRACTIONS, difficulty=5,
+        super().__init__("Maestro de la Geometría", hp=180, attack=34,
+                         math_topic=MathTopic.GEOMETRIA, difficulty=4,
                          is_boss=True)

@@ -12,7 +12,8 @@ Este archivo solo SABE DÓNDE están y cómo cargarlos. Para cambiar el
 aspecto del juego:
 
 1. Reemplaza los PNG (mismo nombre de archivo), o
-2. Edita las cuadrículas de tools/sprite_data.py y regenera:
+2. Edita el dibujo en tools/art_hero.py / tools/art_enemies.py y
+   regenera (la fuente de verdad es tools/generate_art.py):
 
        ./venv/bin/python tools/generate_sprites.py
 

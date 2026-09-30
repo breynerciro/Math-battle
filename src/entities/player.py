@@ -19,7 +19,7 @@ class Player:
 
     def __init__(self) -> None:
         # -- Identidad ------------------------------------------------------
-        self.name: str = "Héroe Matemático"
+        self.name: str = "Matías"
 
         # -- Combate --------------------------------------------------------
         self.max_hp: int = config.PLAYER_MAX_HP
@@ -50,11 +50,10 @@ class Player:
             self.sprites[animation].reset()
 
     def take_damage(self, damage: int) -> int:
-        """Recibe daño (la defensa lo reduce un poco). Devuelve el daño real."""
-        real_damage = max(1, damage - self.defense)
-        self.hp = max(0, self.hp - real_damage)
+        """Recibe daño. Devuelve el daño real (es el daño del contraataque)."""
+        self.hp = max(0, self.hp - damage)
         self.play("hurt")
-        return real_damage
+        return damage
 
     def heal(self, amount: int) -> None:
         """Recupera vida sin pasarse del máximo."""

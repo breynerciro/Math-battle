@@ -3,9 +3,9 @@ test_combat_system.py — Tests del sistema de combate
 ====================================================
 
 Verifica la lógica de turnos SIN Pygame (usando dobles de prueba):
-- daño correcto al acertar,
-- contraataque al fallar,
-- timers y daño reducido por tiempo agotado,
+- daño FIJO de 25 al acertar,
+- contraataque FIJO de 15 al fallar,
+- timers y timeout,
 - muerte de enemigos y del jugador,
 - cálculo de puntos y combos.
 """
@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.combat.combat_system import CombatSystem
 from src.entities.player import Player
 from src.math_engine.challenge import MathChallenge, MathTopic
+from src import config
 
 
 # ---------------------------------------------------------------------- #
@@ -33,7 +34,7 @@ class FakeEnemy:
         self.max_hp = hp
         self.hp = hp
         self.attack = attack
-        self.math_topic = MathTopic.OPERATIONS
+        self.math_topic = MathTopic.SUMAS
         self.difficulty = difficulty
         self.is_boss = is_boss
 
@@ -61,6 +62,9 @@ class FakeGenerator:
             time_limit=self.time_limit,
             points=100,
             difficulty=difficulty,
+            # Opción múltiple controlada: la 0 (A) es la correcta
+            options=[str(self.answer), "8", "6", "9"],
+            correct_index=0,
         )
 
 
@@ -84,9 +88,8 @@ def setup():
     player.is_dead = lambda: player.hp <= 0
 
     def take_damage(damage):
-        real = max(1, damage - player.defense)
-        player.hp = max(0, player.hp - real)
-        return real
+        player.hp = max(0, player.hp - damage)
+        return damage
     player.take_damage = take_damage
 
     def register_correct(challenge, response_time):
@@ -115,9 +118,26 @@ def test_correct_answer_damages_enemy(setup):
     combat.start_challenge(enemy)
     result = combat.submit_answer("7")
     assert result["correct"] is True
-    assert result["damage"] > 0
-    assert enemy.hp < enemy.max_hp
+    assert result["damage"] == config.HERO_DAMAGE      # daño fijo: 25
+    assert enemy.hp == enemy.max_hp - config.HERO_DAMAGE
     assert combat.phase == CombatSystem.PH_PLAYER_ATTACK
+
+
+def test_submit_option_by_index(setup):
+    """El jugador responde eligiendo la opción A-D (índice 0-3)."""
+    player, enemy, generator, combat = setup
+    combat.start_challenge(enemy)
+    # Opción correcta (índice 0 en el doble de prueba)
+    result = combat.submit_option(0)
+    assert result["correct"] is True
+    assert result["damage"] == config.HERO_DAMAGE
+    # Opción incorrecta
+    combat.start_challenge(enemy)
+    hp_before = player.hp
+    result = combat.submit_option(3)
+    assert result["correct"] is False
+    assert result["damage"] == config.COUNTER_DAMAGE   # contraataque: 15
+    assert player.hp == hp_before - config.COUNTER_DAMAGE
 
 
 def test_wrong_answer_counterattacks(setup):
@@ -126,20 +146,20 @@ def test_wrong_answer_counterattacks(setup):
     hp_before = player.hp
     result = combat.submit_answer("999")
     assert result["correct"] is False
-    assert result["damage"] > 0
-    assert player.hp < hp_before
+    assert result["damage"] == config.COUNTER_DAMAGE
+    assert player.hp == hp_before - config.COUNTER_DAMAGE
     assert combat.phase == CombatSystem.PH_ENEMY_ATTACK
 
 
-def test_timeout_reduces_damage(setup):
+def test_timeout_counts_as_wrong(setup):
     player, enemy, generator, combat = setup
     combat.start_challenge(enemy)
     combat.challenge_time = generator.time_limit + 1   # simular espera total
-    result = combat.submit_answer("")                  # respuesta vacía
+    result = combat.submit_option(None)                # no se eligió nada
     assert result["timeout"] is True
     assert result["correct"] is False
-    # Con timeout el golpe duele la mitad (enemigo normal: 10-30 → máx 15+1)
-    assert result["damage"] <= 16
+    # El tiempo agotado duele igual: daño fijo del contraataque
+    assert result["damage"] == config.COUNTER_DAMAGE
 
 
 def test_enemy_death_sets_phase_and_heals(setup):
@@ -161,8 +181,8 @@ def test_player_death_sets_defeat(setup):
     assert combat.phase == CombatSystem.PH_DEFEAT
 
 
-def test_boss_reduces_player_damage(setup):
-    """Los bosses reducen el daño recibido (piel dura)."""
+def test_damage_is_fixed_for_bosses_too(setup):
+    """El daño es FIJO (diseño del juego): ni bosses ni suerte lo cambian."""
     player, _, generator, _ = setup
     boss = FakeEnemy(hp=1000, is_boss=True)
     normal = FakeEnemy(hp=1000, is_boss=False)
@@ -173,8 +193,7 @@ def test_boss_reduces_player_damage(setup):
     d_boss = combat_boss.submit_answer("7")["damage"]
     combat_norm.start_challenge(normal)
     d_norm = combat_norm.submit_answer("7")["damage"]
-    # Mismo tiempo de respuesta → al boss se le hace menos daño
-    assert d_boss < d_norm
+    assert d_boss == d_norm == config.HERO_DAMAGE
 
 
 def test_timer_runs_only_in_challenge_phase(setup):
@@ -214,12 +233,12 @@ def test_player_score_and_combo(setup):
     assert player.max_combo == 2
 
 
-def test_player_defense_reduces_damage(setup):
+def test_player_damage_is_flat(setup):
+    """El contraataque resta exactamente su daño (sin defensa que lo suavice)."""
     player = setup[0]
-    player.defense = 5
-    real = player.take_damage(10)
-    assert real == 5
-    assert player.hp == 95
+    real = player.take_damage(config.COUNTER_DAMAGE)
+    assert real == config.COUNTER_DAMAGE
+    assert player.hp == 100 - config.COUNTER_DAMAGE
 
 
 def test_player_heal_caps_at_max(setup):

@@ -11,17 +11,25 @@ Separar esto en su propio archivo evita importaciones circulares entre
 challenge_generator.py y los módulos de operaciones.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
 class MathTopic(Enum):
-    """Los 5 temas matemáticos, uno por nivel del juego."""
-    OPERATIONS = 1      # Nivel 1: +, −, ×, ÷
-    EQUATIONS = 2       # Nivel 2: ecuaciones lineales
-    POWERS_ROOTS = 3    # Nivel 3: potencias y raíces
-    FRACTIONS = 4       # Nivel 4: fracciones
-    GEOMETRY = 5        # Nivel 5: áreas, perímetros, ángulos
+    """Los 5 temas matemáticos, uno por nivel del juego.
+
+    El orden ES el orden de los niveles del "El Héroe de las Matemáticas":
+        1 Bosque de las Sumas          sumas y restas
+        2 Mina de la Multiplicación    ×, ÷ y problemas de lógica
+        3 Templo de las Fracciones     fracciones
+        4 Puente Hacia el Caos         geometría y ecuaciones
+        5 Castillo del Caos            álgebra
+    """
+    SUMAS = 1            # Nivel 1: sumas y restas básicas
+    MULTIPLICACION = 2   # Nivel 2: multiplicación, división y lógica
+    FRACCIONES = 3       # Nivel 3: operaciones con fracciones
+    GEOMETRIA = 4        # Nivel 4: perímetros, áreas y ecuaciones
+    ALGEBRA = 5          # Nivel 5: álgebra (ecuaciones lineales)
 
 
 @dataclass
@@ -36,6 +44,8 @@ class MathChallenge:
         points:          puntos base si se acierta
         difficulty:      nivel de dificultad (1 a 5)
         hint:            pista opcional para el jugador
+        options:         las 4 opciones A, B, C, D (las llena options.build)
+        correct_index:   índice de la correcta dentro de `options`
     """
     question: str
     answer: object                 # int, float o Fraction
@@ -44,6 +54,18 @@ class MathChallenge:
     points: int = 100
     difficulty: int = 1
     hint: str = ""
+    options: list = field(default_factory=list)
+    correct_index: int = -1
+
+    def check_option(self, index: int) -> bool:
+        """¿La opción elegida (0-3) es la correcta?"""
+        return index == self.correct_index
+
+    def correct_option(self) -> str:
+        """Texto de la opción correcta (para el feedback educativo)."""
+        if 0 <= self.correct_index < len(self.options):
+            return self.options[self.correct_index]
+        return self.answer_display or str(self.answer)
 
     def check_answer(self, user_answer) -> bool:
         """Compara la respuesta del jugador con la correcta.

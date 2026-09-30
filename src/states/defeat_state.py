@@ -25,9 +25,9 @@ class DefeatState(BaseState):
 
         cx = config.SCREEN_WIDTH // 2
         self.buttons = [
-            Button(cx - 120, 410, 240, 52, "REINTENTAR",
+            Button(cx - 120, 540, 240, 52, "REINTENTAR",
                    on_click=self._retry, font_size=config.FONT_SIZE_MEDIUM),
-            Button(cx - 120, 475, 240, 52, "MENÚ",
+            Button(cx - 120, 610, 240, 52, "MENÚ",
                    on_click=self._go_menu, font_size=config.FONT_SIZE_MEDIUM),
         ]
 
@@ -73,11 +73,11 @@ class DefeatState(BaseState):
         cx = config.SCREEN_WIDTH // 2
 
         self.draw_text(screen, "GAME OVER", config.FONT_SIZE_TITLE,
-                       config.DARK_RED, cx + 4, 114, center=True)
+                       config.DARK_RED, cx + 4, 134, center=True)
         self.draw_text(screen, "GAME OVER", config.FONT_SIZE_TITLE,
-                       config.RED, cx, 110, center=True)
+                       config.RED, cx, 130, center=True)
         # Frase motivadora ajustada por píxeles para no desbordar
-        y = 170
+        y = 195
         for line in self._wrap(
                 "Los monstruos temen a quien practica: ¡inténtalo de nuevo!",
                 config.FONT_SIZE_SMALL, 760):
@@ -92,7 +92,7 @@ class DefeatState(BaseState):
             f"Combo máximo: x{self.player.max_combo}",
             f"Precisión: {accuracy}%",
         ]
-        y = 260
+        y = 320
         for line in stats:
             self.draw_text(screen, line, config.FONT_SIZE_MEDIUM,
                            config.WHITE, cx, y, center=True)

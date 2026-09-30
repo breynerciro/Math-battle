@@ -1,4 +1,11 @@
-# Rediseño de Escenarios - Math Battle
+# Rediseño de Escenarios (documento histórico)
+
+> ⚠️ **Nota**: este documento describe una iteración anterior. Desde
+> entonces los niveles se renombraron al diseño final (El Bosque de las
+> Sumas, La Mina de la Multiplicación, El Templo de las Fracciones, El
+> Puente Hacia el Caos, El Castillo del Caos), el arte se rehizo con
+> Pillow en `tools/art_*.py` y la ventana pasó a 1280×720. El texto que
+> sigue queda como registro de lo hecho en esa iteración.
 
 ## Resumen de Mejoras
 

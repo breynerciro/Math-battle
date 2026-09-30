@@ -1,31 +1,33 @@
 """
-level2_enemies.py — Cueva de Ecuaciones (Nivel 2)
-=================================================
+level2_enemies.py — La Mina de la Multiplicación (Nivel 2)
+==========================================================
 
-Tema matemático: ecuaciones lineales (ax + b = c)
-Enemigos: Esqueleto → Bruja → Boss: Gólem de Piedra
+Tema matemático: multiplicación, división y problemas de lógica
+Enemigos: Bruja → Fantasma → BOSS: Duende Calculador (HP 80)
 """
 
 from ...math_engine.challenge import MathTopic
 from ..enemy import Enemy
 
 
-class Skeleton(Enemy):
-    def __init__(self) -> None:
-        super().__init__("Esqueleto", hp=80, attack=16,
-                         math_topic=MathTopic.EQUATIONS, difficulty=2)
-
-
 class Witch(Enemy):
     def __init__(self) -> None:
-        super().__init__("Bruja", hp=100, attack=18,
-                         math_topic=MathTopic.EQUATIONS, difficulty=3)
+        super().__init__("Bruja", hp=55, attack=16,
+                         math_topic=MathTopic.MULTIPLICACION, difficulty=2)
 
 
-class StoneGolem(Enemy):
-    """BOSS del nivel 2."""
+class Ghost(Enemy):
+    def __init__(self) -> None:
+        super().__init__("Fantasma", hp=65, attack=18,
+                         math_topic=MathTopic.MULTIPLICACION, difficulty=2)
+
+
+class DuendeCalculador(Enemy):
+    """BOSS del nivel 2: el Duende Calculador (HP 80)."""
+
+    SPRITE_NAME = "goblin"
 
     def __init__(self) -> None:
-        super().__init__("Gólem de Piedra", hp=180, attack=28,
-                         math_topic=MathTopic.EQUATIONS, difficulty=4,
+        super().__init__("Duende Calculador", hp=80, attack=24,
+                         math_topic=MathTopic.MULTIPLICACION, difficulty=3,
                          is_boss=True)

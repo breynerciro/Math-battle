@@ -39,10 +39,14 @@ def _rand_fraction(max_den=6):
 
 
 def _make(question, answer: Fraction, difficulty, hint):
+    # Si el resultado es entero (6/1) se muestra como "6": una fracción
+    # sobre 1 no es la respuesta bonita que queremos enseñar.
+    display = (str(answer.numerator) if answer.denominator == 1
+               else f"{answer.numerator}/{answer.denominator}")
     return MathChallenge(
         question=question,
         answer=answer,
-        answer_display=f"{answer.numerator}/{answer.denominator}",
+        answer_display=display,
         time_limit=config.TIME_LIMIT_FRACTIONS,
         points=config.POINTS_BASE,
         difficulty=difficulty,

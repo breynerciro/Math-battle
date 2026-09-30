@@ -8,8 +8,10 @@ La clase Game:
 3. Maneja la MÁQUINA DE ESTADOS (una pila de pantallas).
 4. Ejecuta el loop principal: eventos → update → render, 60 veces por segundo.
 
-¿Por qué una PILA de estados? Porque la pregunta matemática se dibuja
-ENCIMA de la batalla. La batalla no se destruye: se "pausa" (pause/resume).
+¿Por qué una PILA de estados? Para las pantallas que SÍ se apilan
+(batalla → victoria, menú → créditos...). La pregunta matemática vive
+DENTRO del panel inferior de la batalla: no hace falta apilar nada para
+responder.
 """
 
 import pygame
