@@ -2,6 +2,7 @@
 .agents/
 venv/
 .venv/
+.claude/
 
 # Caché de Python
 __pycache__/
