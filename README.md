@@ -26,8 +26,7 @@ python3 -m venv venv
 ```
 
 En Windows con Git Bash también funciona `./venv/bin/python main.py`;
-con CMD/PowerShell usa `venv\Scripts\python main.py`. El antiguo
-`run_game.py` sigue funcionando como alias.
+con CMD/PowerShell usa `venv\Scripts\python main.py`.
 
 ---
 
@@ -73,7 +72,6 @@ con CMD/PowerShell usa `venv\Scripts\python main.py`. El antiguo
 ```
 Math-battle/
 ├── main.py                 ← PUNTO DE ENTRADA (ejecuta esto)
-├── run_game.py             ← alias histórico de main.py
 ├── requirements.txt         ← dependencias (pygame)
 ├── save_data.json           ← tu progreso (se crea solo)
 ├── src/
