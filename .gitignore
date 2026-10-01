@@ -3,6 +3,7 @@
 venv/
 .venv/
 .claude/
+.claude1/
 
 # Caché de Python
 __pycache__/
